@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "458969704325",
+    "project_id": "love-blocks",
+    "storage_bucket": "love-blocks.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458969704325:android:4830188ecfe21f659286ec",
+        "android_client_info": {
+          "package_name": "blocks.love"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458969704325-1a2k7fmdir6dvp5sflt961bg2nfi3o3e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQbSNUmcNIFeCteQ5XzlGKLMSf58JXhNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458969704325-1a2k7fmdir6dvp5sflt961bg2nfi3o3e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

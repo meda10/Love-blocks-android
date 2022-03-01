@@ -1,191 +1,96 @@
 package blocks.love
 
-import android.app.Activity
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
+import android.view.View
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
-import androidx.navigation.ui.navigateUp
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import blocks.love.databinding.ActivityMainBinding
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.ktx.messaging
-
-
-
-import androidx.core.content.PackageManagerCompat
-
-//import blocks.love.R
-//import android.R
-
-import com.google.firebase.messaging.ktx.messaging
-import com.google.firebase.messaging.ktx.remoteMessage
-import java.util.concurrent.atomic.AtomicInteger
-
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.IdpResponse
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.firebase.ui.auth.util.ExtraConstants
+import com.google.android.gms.auth.api.Auth
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMainBinding
+    // Activity Callback
+    private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract()
+    ) { res -> this.onSignInResult(res) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.main_screen)
+    }
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        Firebase.messaging.isAutoInitEnabled = true
+    override fun onStart() {
+        super.onStart()
 
+        FirebaseAuth.getInstance().currentUser?.let {
+            onUserSignedIn(it)
+        } ?: onUserSignedOut()
+    }
 
-//        val navController = findNavController(R.id.nav_host_fragment_content_main)
-//        appBarConfiguration = AppBarConfiguration(navController.graph)
-//        setupActionBarWithNavController(navController, appBarConfiguration)
+    // Runs when user is Signed In
+    private fun onUserSignedIn(user: FirebaseUser) {
+        val view_label = findViewById<View>(R.id.view_label) as TextView
+        val view_btn = findViewById<View>(R.id.view_btn) as Button
+        view_label.text = user.displayName
+        view_btn.setText("Sign Out")
+        view_btn.setOnClickListener { signOut() }
+    }
 
-        ///Firebase
+    // Signs Out user -> On button click
+    private fun signOut() {
+        AuthUI.getInstance()
+            .signOut(this)
+            .addOnCompleteListener { onUserSignedOut() }
+    }
 
-//        checkPlayServices() //TODO
+    // Runs when user is Signed Out
+    private fun onUserSignedOut() {
+        val view_label = findViewById<View>(R.id.view_label) as TextView
+        val view_btn = findViewById<View>(R.id.view_btn) as Button
+        view_label.text = null
+        view_btn.setText("Sign In")
+        view_btn.setOnClickListener { signIn() }
+    }
 
-        val channelId = getString(R.string.default_notification_channel_id)
-        val channelName = getString(R.string.default_notification_channel_name)
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager?.createNotificationChannel(
-            NotificationChannel(channelId,
-            channelName, NotificationManager.IMPORTANCE_LOW)
+    // Signs In user -> On button click
+    private fun signIn() {
+        val idpConfigs = listOf(
+            AuthUI.IdpConfig.EmailBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build(),
         )
 
-        intent.extras?.let {
-            for (key in it.keySet()) {
-                val value = intent.extras?.get(key)
-                Log.d(TAG, "Key: $key Value: $value")
-            }
-        }
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(idpConfigs)
+            .build()
 
-        binding.subButton.setOnClickListener {
-            Log.d(TAG, "Subscribing to weather topic")
-            // [START subscribe_topics]
-            Firebase.messaging.subscribeToTopic("weather").addOnCompleteListener { task ->
-                    var msg = getString(R.string.msg_subscribed)
-                    if (!task.isSuccessful) {
-                        msg = getString(R.string.msg_subscribe_failed)
-                    }
-                    Log.d(TAG, msg)
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                }
-            // [END subscribe_topics]
-        }
-
-        binding.showButton.setOnClickListener {
-            get_current_token()
-        }
-
-        Toast.makeText(this, "See README for setup instructions", Toast.LENGTH_SHORT).show()
+        signInLauncher.launch(signInIntent)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
+    // Activity result
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+        if (result.resultCode == RESULT_OK) {
+            // Successfully signed in
+            val user = FirebaseAuth.getInstance().currentUser!!
+            onUserSignedIn(user)
+        } else {
+            // Sign in failed. If response is null the user canceled the
+            // sign-in flow using the back button. Otherwise check
+            // response.getError().getErrorCode() and handle the error.
+//            val response = IdpResponse.fromResultIntent(data)
+            response?.error?.printStackTrace()
+            onUserSignedOut()
         }
     }
-
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
-    }
-
-    //Check play service availability
-    private fun checkPlayServices(activity: Activity?): Boolean {
-        val apiAvailability: GoogleApiAvailability = GoogleApiAvailability.getInstance()
-        val resultCode: Int = apiAvailability.isGooglePlayServicesAvailable(activity!!)
-        if (resultCode != ConnectionResult.SUCCESS) {
-            if (apiAvailability.isUserResolvableError(resultCode)) {
-                apiAvailability.makeGooglePlayServicesAvailable(activity)
-//                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST).show()
-            } else {
-//                Log.i(PackageManagerCompat.LOG_TAG, "This device is not supported.")
-                Toast.makeText(
-                    activity,
-                    R.string.push_error_device_not_compatible,
-                    Toast.LENGTH_SHORT
-                ).show()
-                finish()
-            }
-            return false
-        }
-        return true
-    }
-
-    private fun get_current_token() {
-        Firebase.messaging.getToken().addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
-            }
-
-            // Get new FCM registration token
-            val token = task.result
-
-            // Log token and Toast (show on screen)
-            val msg = getString(R.string.msg_token_fmt, token)
-            Log.d(TAG, msg)
-            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-        })
-    }
-
-    companion object {
-        private const val TAG = "MyFirebaseMsgService"
-    }
-
-    /*
-    fun runtimeEnableAutoInit() {
-        // [START fcm_runtime_enable_auto_init]
-        Firebase.messaging.isAutoInitEnabled = true
-        // [END fcm_runtime_enable_auto_init]
-    }
-
-    fun deviceGroupUpstream() {
-        // [START fcm_device_group_upstream]
-        val to = "a_unique_key" // the notification key
-        val msgId = AtomicInteger()
-        Firebase.messaging.send(remoteMessage(to) {
-            setMessageId(msgId.get().toString())
-            addData("hello", "world")
-        })
-        // [END fcm_device_group_upstream]
-    }
-
-    fun sendUpstream() {
-        val SENDER_ID = "YOUR_SENDER_ID"
-        val messageId = 0 // Increment for each
-        // [START fcm_send_upstream]
-        val fm = Firebase.messaging
-        fm.send(remoteMessage("$SENDER_ID@fcm.googleapis.com") {
-            setMessageId(messageId.toString())
-            addData("my_message", "Hello World")
-            addData("my_action", "SAY_HELLO")
-        })
-        // [END fcm_send_upstream]
-    }
-    */
-
-
 }

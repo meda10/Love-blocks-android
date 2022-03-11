@@ -13,33 +13,40 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
+const val sharedPrefFile = "login_shared_preferences"
+const val logged = "logged"
 
-class AuthActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private val sharedPrefFile = "login_shared_preferences"
-    private val logged = "logged"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
+        val user = Firebase.auth.currentUser
         setContentView(R.layout.activity_login)
 
-        val user = Firebase.auth.currentUser
-        if (user != null) {
-            userIsLoggedIn()
-        } else {
-            userIsLoggedOut()
+
+        when {
+            user != null -> userIsLoggedIn()
+
+            else -> {
+                val token = intent.getStringExtra("EXTRA_USER_TOKEN")
+                when {
+                    token != null -> loginWithCustomToken(token)
+                    else -> userIsLoggedOut()
+                }
+            }
         }
     }
 
     override fun onStart() {
         super.onStart()
         val user = Firebase.auth.currentUser
-        if (user != null) {
-            userIsLoggedIn()
-        } else {
-            userIsLoggedOut()
+
+        when {
+            user != null -> userIsLoggedIn()
+            else -> userIsLoggedOut()
         }
     }
 
@@ -69,7 +76,6 @@ class AuthActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
         if (sharedPreferences.getBoolean(logged, false)) {
             val intent = Intent(this, MainActivity::class.java)
-//        intent.putExtra("user", user)
             startActivity(intent)
         }
     }
@@ -86,20 +92,6 @@ class AuthActivity : AppCompatActivity() {
         buttonLogin.setOnClickListener { loginButton() }
     }
 
-    // Runs when user is not Registered
-    private fun userIsNotRegistered() {
-        val registerEmail = findViewById<View>(R.id.register_email_edit) as EditText
-        val registerPassword = findViewById<View>(R.id.register_password_edit) as EditText
-        val registerPasswordConfirm = findViewById<View>(R.id.register_password_confirm_edit) as EditText
-        val buttonRegister = findViewById<View>(R.id.btn_register) as Button
-
-        registerEmail.text = null
-        registerPassword.text = null
-        registerPasswordConfirm.text = null
-
-        buttonRegister.setOnClickListener { registerButton() }
-    }
-
     // Login user -> On button click
     private fun loginButton() {
         val loginEmail = findViewById<View>(R.id.login_email_edit) as EditText
@@ -108,18 +100,6 @@ class AuthActivity : AppCompatActivity() {
         login(
             loginEmail.text.toString(),
             loginPassword.text.toString()
-        )
-    }
-
-    private fun registerButton() {
-        val registerEmail = findViewById<View>(R.id.register_email_edit) as EditText
-        val registerPassword = findViewById<View>(R.id.register_password_edit) as EditText
-        val registerPasswordConfirm = findViewById<View>(R.id.register_password_confirm_edit) as EditText
-
-        register(
-            registerEmail.text.toString(),
-            registerPassword.text.toString(),
-            registerPasswordConfirm.text.toString()
         )
     }
 
@@ -141,14 +121,9 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
-    fun loginOnClick(view: View?) {
-        setContentView(R.layout.activity_login)
-        userIsLoggedOut()
-    }
-
     fun registerOnClick(view: View?) {
-        setContentView(R.layout.activity_register)
-        userIsNotRegistered()
+        val intent = Intent(this, RegisterActivity::class.java)
+        startActivity(intent)
     }
 
     private fun login(email: String, password: String) {
@@ -179,46 +154,6 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
-    private fun register(email: String, password: String, passwordConfirmation: String) {
-        val apiManager = RestApiManager()
-        val userData = RegisterData(
-            name = "",
-            email = "me@dd.czcx",
-            password = "",
-            password_confirmation = "password",
-            terms = "accepted",
-        )
-        Log.d("REG", "Email: $email | Password: $password | Confirm: $passwordConfirmation")
-
-
-        apiManager.registerUser(userData) { responseData ->
-            when {
-                responseData?.access_token != null -> {
-                    Log.d("REG", "WIN")
-                    Log.d("REG", responseData.id)
-                    Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
-                }
-                //todo Error
-                responseData?.errors?.error != null -> {
-                    Log.d("REG", responseData.errors.error)
-                }
-                responseData?.errors?.email != null -> {
-                    for (i in 0 until responseData.errors.email.count()) Log.d("REG", responseData.errors.email[i])
-                }
-                responseData?.errors?.name != null -> {
-                    for (i in 0 until responseData.errors.name.count()) Log.d("REG", responseData.errors.name[i])
-                }
-                responseData?.errors?.password != null -> {
-                    for (i in 0 until responseData.errors.password.count()) Log.d("REG", responseData.errors.password[i])
-                }
-                else -> {
-                    Log.d("REG", "NULL")
-                    Log.d("REG", responseData.toString())
-                    Toast.makeText(baseContext, "REG NULL", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     private fun loginWithCustomToken(firebaseToken: String){
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
@@ -227,10 +162,10 @@ class AuthActivity : AppCompatActivity() {
         firebaseToken.let { token ->
             auth.signInWithCustomToken(token).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Log.d("CUSTOM", "signInWithCustomToken:success")
+                    Log.d("LOGIN", "signInWithCustomToken:success")
                     userIsLoggedIn()
                 } else {
-                    Log.w("CUSTOM", "signInWithCustomToken:failure", task.exception)
+                    Log.w("LOGIN", "signInWithCustomToken:failure", task.exception)
                     Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     userIsLoggedOut()
                 }

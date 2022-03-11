@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun goToAuthActivity() {
-        val intent = Intent(this, AuthActivity::class.java)
+        val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
     }
 }

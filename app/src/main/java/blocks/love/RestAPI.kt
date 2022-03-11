@@ -1,9 +1,7 @@
 package blocks.love
 
 import android.util.Log
-import android.widget.Toast
 import blocks.love.UnsafeOkHttpClient.unsafeOkHttpClient
-import com.firebase.ui.auth.data.model.User
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -24,10 +22,11 @@ import javax.net.ssl.X509TrustManager
 
 
 data class RegisterData(var name: String, var email: String, var password: String, var password_confirmation: String, var terms: String)
-data class RegisterResponse(var id: Int, var access_token: String, var token_type: String, var expires_at: String, var error: String)
+data class RegisterResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
 data class LoginData(var email: String, var password: String)
-data class LoginResponse(var id: Int, var access_token: String, var token_type: String, var expires_at: String, var error: String)
-data class Test(var Message: String)
+data class LoginResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
+data class Test(val Message: String)
+data class Error(val name: List<String>, val email: List<String>, val password: List<String>, val terms: List<String>, val error: String)
 
 var unsafeHttpClient = unsafeOkHttpClient // TODO remove -> only for local development
 const val BASE_URL = "https://192.168.0.20/api/"
@@ -97,7 +96,7 @@ class RestApiManager {
                 }
                 override fun onResponse(call: Call<RegisterResponse>, response: Response<RegisterResponse>) {
                     val registeredUser = response.body()
-                    Log.d("POST", response.body().toString())
+                    Log.d("REG", response.body().toString())
                     onResult(registeredUser)
                 }
             }
@@ -113,7 +112,7 @@ class RestApiManager {
                 }
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     val loggedUser = response.body()
-                    Log.d("POST", response.body().toString())
+                    Log.d("LOGIN", response.body().toString())
                     onResult(loggedUser)
                 }
             }

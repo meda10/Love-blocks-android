@@ -1,6 +1,7 @@
 package blocks.love
 
 import android.util.Log
+import android.widget.Toast
 import blocks.love.UnsafeOkHttpClient.unsafeOkHttpClient
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -21,10 +22,12 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 
-data class RegisterData(var name: String, var email: String, var password: String, var password_confirmation: String, var terms: String)
+data class RegisterData(var name: String, var email: String, var password: String, var password_confirmation: String, var terms: String, var fcm_token: String)
 data class RegisterResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
-data class LoginData(var email: String, var password: String)
+data class LoginData(var email: String, var password: String, var fcm_token: String)
 data class LoginResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
+data class TokenData(val id_token: String, val fcm_token: String)
+data class TokenResponse(val errors: Error)
 data class Test(val Message: String)
 data class Error(val name: List<String>, val email: List<String>, val password: List<String>, val terms: List<String>, val error: String)
 
@@ -48,6 +51,23 @@ interface ApiTest {
                 .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiTest::class.java)
+        }
+    }
+}
+
+interface ApiToken {
+    @Headers("Content-Type: application/json")
+    @POST("fcm_token")
+    fun sendToken(@Body tokenData: TokenData): Call<TokenResponse>
+
+    companion object {
+        fun create(): ApiToken {
+            val retrofit = Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl(BASE_URL)
+                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+                .build()
+            return retrofit.create(ApiToken::class.java)
         }
     }
 }
@@ -95,9 +115,8 @@ class RestApiManager {
                     onResult(null)
                 }
                 override fun onResponse(call: Call<RegisterResponse>, response: Response<RegisterResponse>) {
-                    val registeredUser = response.body()
                     Log.d("REG", response.body().toString())
-                    onResult(registeredUser)
+                    onResult(response.body())
                 }
             }
         )
@@ -111,9 +130,26 @@ class RestApiManager {
                     onResult(null)
                 }
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                    val loggedUser = response.body()
                     Log.d("LOGIN", response.body().toString())
-                    onResult(loggedUser)
+                    onResult(response.body())
+                }
+            }
+        )
+    }
+
+    fun sendToken(tokenData: TokenData, onResult: (TokenResponse?) -> Unit){
+        val retrofit = ApiToken.create().sendToken(tokenData)
+        retrofit.enqueue(
+            object : Callback<TokenResponse> {
+                override fun onFailure(call: Call<TokenResponse>, t: Throwable) {
+                    onResult(null)
+                }
+                override fun onResponse(call: Call<TokenResponse>, response: Response<TokenResponse>) {
+                    Log.d("TOKEN", response.body().toString())
+                    when{
+                        response.code() == 200 -> Log.d("TOKEN", "Successful 200")
+                        else -> onResult(response.body())
+                    }
                 }
             }
         )

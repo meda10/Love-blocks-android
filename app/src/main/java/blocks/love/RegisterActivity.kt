@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -54,44 +55,51 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun register(email: String, password: String, passwordConfirmation: String) {
-        val apiManager = RestApiManager()
-        val userData = RegisterData(
-            name = "Barry",
-            email = email,
-            password = password,
-            password_confirmation = passwordConfirmation,
-            terms = "accepted",
-        )
-        Log.d("REG", "Email: $email | Password: $password | Confirm: $passwordConfirmation")
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
+            if (getFCMToken.isSuccessful) {
+                val fcmToken = getFCMToken.result
+                val userData = RegisterData(
+                    name = "Barry",
+                    email = email,
+                    password = password,
+                    password_confirmation = passwordConfirmation,
+                    terms = "accepted",
+                    fcm_token = fcmToken
+                )
+                Log.d("REG", "Email: $email | Password: $password | Confirm: $passwordConfirmation")
 
+                RestApiManager().registerUser(userData) { responseData ->
+                    when {
+                        responseData?.access_token != null -> {
+                            Log.d("REG", "WIN")
+                            Log.d("REG", responseData.id)
+                            Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
 
-        apiManager.registerUser(userData) { responseData ->
-            when {
-                responseData?.access_token != null -> {
-                    Log.d("REG", "WIN")
-                    Log.d("REG", responseData.id)
-                    Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
-
-                    loginWithCustomToken(responseData.access_token)
+                            loginWithCustomToken(responseData.access_token)
+                        }
+                        //todo Error
+                        responseData?.errors?.error != null -> {
+                            Log.d("REG", responseData.errors.error)
+                        }
+                        responseData?.errors?.email != null -> {
+                            for (i in 0 until responseData.errors.email.count()) Log.d("REG", responseData.errors.email[i])
+                        }
+                        responseData?.errors?.name != null -> {
+                            for (i in 0 until responseData.errors.name.count()) Log.d("REG", responseData.errors.name[i])
+                        }
+                        responseData?.errors?.password != null -> {
+                            for (i in 0 until responseData.errors.password.count()) Log.d("REG", responseData.errors.password[i])
+                        }
+                        else -> {
+                            Log.d("REG", "NULL")
+                            Log.d("REG", responseData.toString())
+                            Toast.makeText(baseContext, "REG NULL", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-                //todo Error
-                responseData?.errors?.error != null -> {
-                    Log.d("REG", responseData.errors.error)
-                }
-                responseData?.errors?.email != null -> {
-                    for (i in 0 until responseData.errors.email.count()) Log.d("REG", responseData.errors.email[i])
-                }
-                responseData?.errors?.name != null -> {
-                    for (i in 0 until responseData.errors.name.count()) Log.d("REG", responseData.errors.name[i])
-                }
-                responseData?.errors?.password != null -> {
-                    for (i in 0 until responseData.errors.password.count()) Log.d("REG", responseData.errors.password[i])
-                }
-                else -> {
-                    Log.d("REG", "NULL")
-                    Log.d("REG", responseData.toString())
-                    Toast.makeText(baseContext, "REG NULL", Toast.LENGTH_SHORT).show()
-                }
+            } else {
+                // todo Handle error
+                Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
     }

@@ -9,12 +9,16 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
+
 
 const val sharedPrefFile = "login_shared_preferences"
 const val logged = "logged"
+const val fcm_token = "fcm_token"
 
 class LoginActivity : AppCompatActivity() {
 
@@ -26,10 +30,8 @@ class LoginActivity : AppCompatActivity() {
         val user = Firebase.auth.currentUser
         setContentView(R.layout.activity_login)
 
-
         when {
             user != null -> userIsLoggedIn()
-
             else -> {
                 val token = intent.getStringExtra("EXTRA_USER_TOKEN")
                 when {
@@ -73,6 +75,7 @@ class LoginActivity : AppCompatActivity() {
 
     // Runs when user is Logged In
     private fun userIsLoggedIn() {
+        sendRegistrationToServer()
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
         if (sharedPreferences.getBoolean(logged, false)) {
             val intent = Intent(this, MainActivity::class.java)
@@ -127,33 +130,43 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login(email: String, password: String) {
-        val apiManager = RestApiManager()
-        val userData = LoginData( email = email, password = password )
-        Log.d("LOGIN", "Email: $email | Password: $password")
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
+            if (getFCMToken.isSuccessful) {
+                val fcmToken = getFCMToken.result
+                val userData = LoginData(
+                    email = email,
+                    password = password,
+                    fcm_token = fcmToken
+                )
+                Log.d("LOGIN", "Email: $email | Password: $password")
 
-        apiManager.loginUser(userData) { responseData ->
-            when {
-                responseData?.access_token != null -> {
-                    Log.d("LOGIN", "WIN")
-                    Log.d("LOGIN", responseData.id)
-                    Toast.makeText(baseContext, "LOGIN WIN", Toast.LENGTH_SHORT).show()
+                RestApiManager().loginUser(userData) { responseData ->
+                    when {
+                        responseData?.access_token != null -> {
+                            Log.d("LOGIN", "WIN")
+                            Log.d("LOGIN", responseData.id)
+                            Toast.makeText(baseContext, "LOGIN WIN", Toast.LENGTH_SHORT).show()
 
-                    loginWithCustomToken(responseData.access_token)
+                            loginWithCustomToken(responseData.access_token)
+                        }
+                        //todo Error
+                        responseData?.errors?.error != null -> {
+                            Log.d("LOGIN", responseData.errors.error)
+                            Toast.makeText(baseContext, "LOGIN FAIL", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            Log.d("LOGIN", "NULL")
+                            Log.d("LOGIN", responseData.toString())
+                            Toast.makeText(baseContext, "LOGIN NULL", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-                //todo Error
-                responseData?.errors?.error != null -> {
-                    Log.d("LOGIN", responseData.errors.error)
-                    Toast.makeText(baseContext, "LOGIN FAIL", Toast.LENGTH_SHORT).show()
-                }
-                else -> {
-                    Log.d("LOGIN", "NULL")
-                    Log.d("LOGIN", responseData.toString())
-                    Toast.makeText(baseContext, "LOGIN NULL", Toast.LENGTH_SHORT).show()
-                }
+            } else {
+                // todo Handle error
+                Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
     }
-
 
     private fun loginWithCustomToken(firebaseToken: String){
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
@@ -169,6 +182,43 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     userIsLoggedOut()
                 }
+            }
+        }
+    }
+
+    /**
+     * Gets FCM token, then user and ID Token -> sends
+     *
+     */
+    private fun sendRegistrationToServer() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
+            if (getFCMToken.isSuccessful) {
+                val fcmToken = getFCMToken.result
+                val user = Firebase.auth.currentUser
+                user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
+                    if (getIDToken.isSuccessful) {
+                        val idToken = getIDToken.result.token
+                        val tokenData = TokenData(
+                            id_token = idToken!!,
+                            fcm_token = fcmToken,
+                        )
+                        RestApiManager().sendToken(tokenData) { responseData ->
+                            when {
+                                //todo Error
+                                responseData?.errors?.error != null -> {
+                                    Log.d("TOKEN", responseData.errors.error)
+                                }
+                            }
+                        }
+                    } else {
+                        // todo Handle error -> task.getException();
+                        Log.w("TOKEN", "Fetching ID token failed", getIDToken.exception)
+                    }
+                }
+                Log.d("TOKEN", "sendRegistrationTokenToServer($fcmToken)")
+            } else {
+                // todo Handle error
+                Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
     }

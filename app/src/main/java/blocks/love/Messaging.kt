@@ -12,6 +12,9 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -22,7 +25,7 @@ const val channel_name = "blocks.love"
 class Messaging : FirebaseMessagingService() {
 
 
-    fun generateNotification(title: String, message : String){
+    private fun generateNotification(title: String, message : String){
 
         val intent = Intent(this,MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -154,11 +157,32 @@ class Messaging : FirebaseMessagingService() {
      * Modify this method to associate the user's FCM registration token with any server-side account
      * maintained by your application.
      *
-     * @param token The new token.
+     * @param fcmToken The new token.
      */
-    private fun sendRegistrationToServer(token: String?) {
-        // TODO: Implement this method to send token to your app server.
-        Log.d(TAG, "sendRegistrationTokenToServer($token)")
+    private fun sendRegistrationToServer(fcmToken: String) {
+//        val sharedPreferences = getSharedPreferences(sharedPrefFile, MODE_PRIVATE)
+//        sharedPreferences.edit().putString(fcm_token, token).apply()
+        val user = Firebase.auth.currentUser
+        user?.getIdToken(true)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val idToken = task.result.token
+                val tokenData = TokenData(
+                    id_token = idToken!!,
+                    fcm_token = fcmToken,
+                )
+                RestApiManager().sendToken(tokenData) { responseData ->
+                    when {
+                        responseData?.errors?.error != null -> {
+                            Log.d("TOKEN", responseData.errors.error)
+                        }
+                    }
+                }
+            } else {
+                // todo Handle error -> task.getException();
+                Log.w("TOKEN", "Fetching ID token failed", task.exception)
+            }
+        }
+        Log.d("TOKEN", "sendRegistrationTokenToServer($fcmToken)")
     }
 
     /**

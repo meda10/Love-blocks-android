@@ -139,6 +139,7 @@ class LoginActivity : AppCompatActivity() {
                     fcm_token = fcmToken
                 )
                 Log.d("LOGIN", "Email: $email | Password: $password")
+                Log.d("LOGIN", "FCM Token: $fcmToken")
 
                 RestApiManager().loginUser(userData) { responseData ->
                     when {
@@ -156,7 +157,6 @@ class LoginActivity : AppCompatActivity() {
                         }
                         else -> {
                             Log.d("LOGIN", "NULL")
-                            Log.d("LOGIN", responseData.toString())
                             Toast.makeText(baseContext, "LOGIN NULL", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -202,11 +202,12 @@ class LoginActivity : AppCompatActivity() {
                             id_token = idToken!!,
                             fcm_token = fcmToken,
                         )
+                        Log.d("TOKEN", "Sending ID Token: $idToken")
                         RestApiManager().sendToken(tokenData) { responseData ->
                             when {
                                 //todo Error
                                 responseData?.errors?.error != null -> {
-                                    Log.d("TOKEN", responseData.errors.error)
+                                    Log.d("TOKEN", "response: " + responseData.errors.error)
                                 }
                             }
                         }
@@ -215,7 +216,7 @@ class LoginActivity : AppCompatActivity() {
                         Log.w("TOKEN", "Fetching ID token failed", getIDToken.exception)
                     }
                 }
-                Log.d("TOKEN", "sendRegistrationTokenToServer($fcmToken)")
+                Log.d("TOKEN", "Sending FCM Token: $fcmToken")
             } else {
                 // todo Handle error
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)

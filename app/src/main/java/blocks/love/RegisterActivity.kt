@@ -92,7 +92,6 @@ class RegisterActivity : AppCompatActivity() {
                         }
                         else -> {
                             Log.d("REG", "NULL")
-                            Log.d("REG", responseData.toString())
                             Toast.makeText(baseContext, "REG NULL", Toast.LENGTH_SHORT).show()
                         }
                     }

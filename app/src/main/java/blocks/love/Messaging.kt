@@ -173,7 +173,7 @@ class Messaging : FirebaseMessagingService() {
                 RestApiManager().sendToken(tokenData) { responseData ->
                     when {
                         responseData?.errors?.error != null -> {
-                            Log.d("TOKEN", responseData.errors.error)
+                            Log.d("TOKEN", "response: " + responseData.errors.error)
                         }
                     }
                 }

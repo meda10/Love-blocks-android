@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import java.io.*
 
 class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapter.ProjectViewHolder>() {
 

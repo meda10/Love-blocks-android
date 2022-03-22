@@ -1,13 +1,24 @@
 package blocks.love
 
+import android.Manifest
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.os.Environment
+import android.os.Environment.getExternalStorageDirectory
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.ktx.auth
@@ -20,6 +31,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
     lateinit var recyclerAdapter: RecyclerAdapter
+    val WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 10
+    val READ_EXTERNAL_STORAGE_PERMISSION_CODE = 20
+    val MANAGE_EXTERNAL_STORAGE_PERMISSION_CODE = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,10 +87,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    public fun writeFile(body: ResponseBody, name: String) {
+    fun writeFile(body: ResponseBody, name: String) {
         try {
-            // todo change the file location/name according to your needs
-            val filePath = File(getExternalFilesDir(null).toString() + File.separator + name)
+            writeFilePermissions()
+            val path = File(getExternalStorageDirectory().absolutePath + File.separator +
+                    "Android" + File.separator + "data" + File.separator + "org.love2d.android" +
+                    File.separator + "files" + File.separator + "games" + File.separator +
+                    "lovegame" + File.separator)
+            Log.d("DOWNLOAD", "directory path: $path")
+            Log.d("DOWNLOAD", "Exists: " + path.exists())
+            if (!path.exists()){
+                path.mkdirs()
+                Log.d("DOWNLOAD", "Create path: $path")
+            }
+            val file = File(path.absolutePath + File.separator + name)
+            Log.d("DOWNLOAD", "file path: $file")
+
+
             var inputStream: InputStream? = null
             var outputStream: OutputStream? = null
             try {
@@ -84,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 val fileSize = body.contentLength()
                 var fileSizeDownloaded: Long = 0
                 inputStream = body.byteStream()
-                outputStream = FileOutputStream(filePath)
+                outputStream = FileOutputStream(file)
                 while (true) {
                     val read = inputStream.read(fileReader)
                     if (read == -1) {
@@ -95,8 +122,16 @@ class MainActivity : AppCompatActivity() {
                     Log.d("DOWNLOAD", "file download: $fileSizeDownloaded of $fileSize")
                 }
                 outputStream.flush()
+
+                val dest = File(getExternalStorageDirectory().absolutePath + File.separator + "lovegame" + File.separator  + name)
+                file.copyRecursively(dest, true, onError = { _, exception ->
+                    Log.d("DOWNLOAD", "file copy fail")
+                    Log.d("DOWNLOAD", exception.toString())
+                    OnErrorAction.SKIP
+                })
             } catch (e: IOException) {
                 //todo handle error
+                Log.e("DOWNLOAD", e.toString())
                 Log.d("DOWNLOAD", "file download was fail")
             } finally {
                 inputStream?.close()
@@ -104,7 +139,69 @@ class MainActivity : AppCompatActivity() {
             }
         } catch (e: IOException) {
             //todo handle error
-            Log.d("DOWNLOAD", "file download was fail")
+            Log.d("DOWNLOAD", "file download was Mega fail")
+            Log.e("DOWNLOAD", e.toString())
+        }
+    }
+
+    private fun writeFilePermissions() {
+        when {
+            SDK_INT >= Build.VERSION_CODES.R -> {
+                if (!Environment.isExternalStorageManager()) {
+                    try {
+                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                        intent.addCategory("android.intent.category.DEFAULT")
+                        intent.data = Uri.fromParts("package", this.packageName, null)
+                        startActivity(intent)
+                        Log.d("DOWNLOAD", "Permission INTENT")
+                    } catch (e: Exception) {
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+                        startActivity(intent)
+                    }
+                    Log.d("DOWNLOAD", "Permission granted R")
+                } else {
+                    Log.d("DOWNLOAD", "Permission IS Manager")
+                }
+            }
+            else -> {
+                checkPermission(READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_PERMISSION_CODE)
+                checkPermission(WRITE_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE)
+                Log.d("DOWNLOAD", "Permission granted")
+            }
+        }
+    }
+
+    private fun checkPermission(permission: String, requestCode: Int) {
+        if (ActivityCompat.checkSelfPermission(this@MainActivity, permission) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            WRITE_EXTERNAL_STORAGE_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Write storage Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Write storage Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+            MANAGE_EXTERNAL_STORAGE_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Manage storage Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Manage storage Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+            READ_EXTERNAL_STORAGE_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Read storage Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Read storage Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

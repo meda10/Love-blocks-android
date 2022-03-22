@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "blocks.love"
-        minSdk 26
+        minSdk 24
         targetSdk 32
         versionCode 1
         versionName "1.0"
@@ -37,7 +37,7 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.30"
 
     implementation "androidx.recyclerview:recyclerview:1.2.1"
 
@@ -49,11 +49,11 @@ dependencies {
     //Firebase
     implementation 'com.firebaseui:firebase-ui-auth:8.0.0'
     implementation platform('com.google.firebase:firebase-bom:29.0.4')
-    implementation 'com.google.firebase:firebase-analytics-ktx:20.1.0'
-    implementation 'com.google.firebase:firebase-messaging-ktx:23.0.0'
+    implementation 'com.google.firebase:firebase-analytics-ktx:20.1.1'
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.0.2'
 //    implementation 'com.google.firebase:firebase-firestore-ktx:24.0.1'
-    implementation "com.google.firebase:firebase-auth-ktx:21.0.1"
-    implementation 'com.google.firebase:firebase-installations-ktx:17.0.0'
+    implementation "com.google.firebase:firebase-auth-ktx:21.0.2"
+    implementation 'com.google.firebase:firebase-installations-ktx:17.0.1'
 
     implementation 'androidx.work:work-runtime:2.7.1'
 

@@ -1,4 +1,4 @@
-package blocks.love
+package blocks.love.utils
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,9 +12,9 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import blocks.love.*
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -27,7 +27,7 @@ class Messaging : FirebaseMessagingService() {
 
     private fun generateNotification(title: String, message : String){
 
-        val intent = Intent(this,MainActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)

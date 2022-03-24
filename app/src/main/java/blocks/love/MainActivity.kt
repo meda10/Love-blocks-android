@@ -1,10 +1,9 @@
 package blocks.love
 
-import android.Manifest
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -17,23 +16,29 @@ import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import blocks.love.utils.DownloadController
+import blocks.love.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import okhttp3.ResponseBody
 import java.io.*
 
-
 class MainActivity : AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
     lateinit var recyclerAdapter: RecyclerAdapter
-    val WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 10
-    val READ_EXTERNAL_STORAGE_PERMISSION_CODE = 20
-    val MANAGE_EXTERNAL_STORAGE_PERMISSION_CODE = 30
+    lateinit var downloadController: DownloadController
+
+    companion object {
+        const val WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 10
+        const val READ_EXTERNAL_STORAGE_PERMISSION_CODE = 20
+        const val REQUEST_INSTALL_PACKAGES_PERMISSION_CODE = 30
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         projectBtn.setOnClickListener { getUserProjects() }
 //        btnDownload.setOnClickListener { downloadFile() }
     }
+
     // Signs Out user -> On button click
     private fun signOutButton() {
         AuthUI.getInstance().signOut(this).addOnCompleteListener { goToAuthActivity() }
@@ -83,68 +89,70 @@ class MainActivity : AppCompatActivity() {
                         Log.d("PROJECTS", "NULL")
                     }
                 }
+            } else {
+                Log.d("PROJECTS", getIDToken.exception.toString())
             }
         }
     }
 
     fun writeFile(body: ResponseBody, name: String) {
-        try {
-            writeFilePermissions()
-            val path = File(getExternalStorageDirectory().absolutePath + File.separator +
-                    "Android" + File.separator + "data" + File.separator + "org.love2d.android" +
-                    File.separator + "files" + File.separator + "games" + File.separator +
-                    "lovegame" + File.separator)
-            Log.d("DOWNLOAD", "directory path: $path")
-            Log.d("DOWNLOAD", "Exists: " + path.exists())
-            if (!path.exists()){
-                path.mkdirs()
-                Log.d("DOWNLOAD", "Create path: $path")
-            }
-            val file = File(path.absolutePath + File.separator + name)
-            Log.d("DOWNLOAD", "file path: $file")
-
-
-            var inputStream: InputStream? = null
-            var outputStream: OutputStream? = null
+        if(writeFilePermissions()) {
             try {
-                val fileReader = ByteArray(4096)
-                val fileSize = body.contentLength()
-                var fileSizeDownloaded: Long = 0
-                inputStream = body.byteStream()
-                outputStream = FileOutputStream(file)
-                while (true) {
-                    val read = inputStream.read(fileReader)
-                    if (read == -1) {
-                        break
-                    }
-                    outputStream.write(fileReader, 0, read)
-                    fileSizeDownloaded += read.toLong()
-                    Log.d("DOWNLOAD", "file download: $fileSizeDownloaded of $fileSize")
+                val path = File(getExternalStorageDirectory().absolutePath + File.separator +
+                        "Android" + File.separator + "data" + File.separator + "org.love2d.android" +
+                        File.separator + "files" + File.separator + "games" + File.separator +
+                        "lovegame" + File.separator)
+                Log.d("DOWNLOAD", "directory path: $path")
+                Log.d("DOWNLOAD", "Exists: " + path.exists())
+                if (!path.exists()){
+                    path.mkdirs()
+                    Log.d("DOWNLOAD", "Create path: $path")
                 }
-                outputStream.flush()
+                val file = File(path.absolutePath + File.separator + name)
+                Log.d("DOWNLOAD", "file path: $file")
 
-                val dest = File(getExternalStorageDirectory().absolutePath + File.separator + "lovegame" + File.separator  + name)
-                file.copyRecursively(dest, true, onError = { _, exception ->
-                    Log.d("DOWNLOAD", "file copy fail")
-                    Log.d("DOWNLOAD", exception.toString())
-                    OnErrorAction.SKIP
-                })
+                var inputStream: InputStream? = null
+                var outputStream: OutputStream? = null
+                try {
+                    val fileReader = ByteArray(4096)
+                    val fileSize = body.contentLength()
+                    var fileSizeDownloaded: Long = 0
+                    inputStream = body.byteStream()
+                    outputStream = FileOutputStream(file)
+                    while (true) {
+                        val read = inputStream.read(fileReader)
+                        if (read == -1) {
+                            break
+                        }
+                        outputStream.write(fileReader, 0, read)
+                        fileSizeDownloaded += read.toLong()
+                        Log.d("DOWNLOAD", "file download: $fileSizeDownloaded of $fileSize")
+                    }
+                    outputStream.flush()
+
+                    val dest = File(getExternalStorageDirectory().absolutePath + File.separator + "lovegame" + File.separator  + name)
+                    file.copyRecursively(dest, true, onError = { _, exception ->
+                        Log.d("DOWNLOAD", "file copy fail")
+                        Log.d("DOWNLOAD", exception.toString())
+                        OnErrorAction.SKIP
+                    })
+                } catch (e: IOException) {
+                    //todo handle error
+                    Log.e("DOWNLOAD", e.toString())
+                    Log.d("DOWNLOAD", "file download was fail")
+                } finally {
+                    inputStream?.close()
+                    outputStream?.close()
+                }
             } catch (e: IOException) {
                 //todo handle error
+                Log.d("DOWNLOAD", "file download was Mega fail")
                 Log.e("DOWNLOAD", e.toString())
-                Log.d("DOWNLOAD", "file download was fail")
-            } finally {
-                inputStream?.close()
-                outputStream?.close()
             }
-        } catch (e: IOException) {
-            //todo handle error
-            Log.d("DOWNLOAD", "file download was Mega fail")
-            Log.e("DOWNLOAD", e.toString())
         }
     }
 
-    private fun writeFilePermissions() {
+    private fun writeFilePermissions(): Boolean {
         when {
             SDK_INT >= Build.VERSION_CODES.R -> {
                 if (!Environment.isExternalStorageManager()) {
@@ -158,23 +166,34 @@ class MainActivity : AppCompatActivity() {
                         val intent = Intent()
                         intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
                         startActivity(intent)
+                        return false
                     }
                     Log.d("DOWNLOAD", "Permission granted R")
+                    return true
                 } else {
                     Log.d("DOWNLOAD", "Permission IS Manager")
+                    return true
                 }
             }
             else -> {
-                checkPermission(READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_PERMISSION_CODE)
-                checkPermission(WRITE_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE)
+//                requestPermission(READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
+                requestPermission(WRITE_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
                 Log.d("DOWNLOAD", "Permission granted")
+                return ActivityCompat.checkSelfPermission(this@MainActivity, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
             }
         }
     }
 
-    private fun checkPermission(permission: String, requestCode: Int) {
+    fun requestPermission(permission: String, requestCode: Int, message: Int) {
         if (ActivityCompat.checkSelfPermission(this@MainActivity, permission) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, permission)) {
+                val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
+                mainLayout.showSnackbar(message, Snackbar.LENGTH_INDEFINITE, R.string.ok) {
+                    ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+                }
+            } else {
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+            }
         }
     }
 
@@ -182,26 +201,34 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             WRITE_EXTERNAL_STORAGE_PERMISSION_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                     Toast.makeText(this@MainActivity, "Write storage Permission Granted", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(this@MainActivity, "Write storage Permission Denied", Toast.LENGTH_SHORT).show()
-                }
-            }
-            MANAGE_EXTERNAL_STORAGE_PERMISSION_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this@MainActivity, "Manage storage Permission Granted", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "Manage storage Permission Denied", Toast.LENGTH_SHORT).show()
+                    val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
+                    mainLayout.showSnackbar(R.string.storage_permission_denied, Snackbar.LENGTH_SHORT)
                 }
             }
             READ_EXTERNAL_STORAGE_PERMISSION_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                     Toast.makeText(this@MainActivity, "Read storage Permission Granted", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this@MainActivity, "Read storage Permission Denied", Toast.LENGTH_SHORT).show()
                 }
             }
+            REQUEST_INSTALL_PACKAGES_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Install Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Install Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+    }
+
+    fun downloadAPK(url: String, fileName: String) {
+        val url = "https://loveblocks.tk/storage/game.apk"
+        downloadController = DownloadController(this, url)
+        Log.d("APK", "APK url: $url")
+        downloadController.enqueueDownload(fileName)
     }
 }

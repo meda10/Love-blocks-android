@@ -1,32 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/projectName"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:gravity="center|center_horizontal|center_vertical"
         android:textColor="@android:color/black"
         android:textSize="18sp"
-        app:layout_constraintEnd_toStartOf="@+id/downloadButton"
+        app:layout_constraintEnd_toStartOf="@+id/downloadAPKButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/downloadButton"
+<!--    <com.google.android.material.button.MaterialButton-->
+<!--        android:id="@+id/downloadAPKButtonText"-->
+<!--        android:layout_marginEnd="8dp"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:layout_marginTop="5dp"-->
+<!--        android:layout_marginBottom="5dp"-->
+
+<!--        android:insetLeft="0dp"-->
+<!--        android:insetRight="0dp"-->
+<!--        android:insetTop="0dp"-->
+<!--        android:insetBottom="0dp"-->
+
+<!--        android:text="@string/apk"-->
+<!--        app:icon="@drawable/ic_download"-->
+<!--        app:iconGravity="textEnd"-->
+<!--        app:iconPadding="5dp"-->
+<!--        app:iconTint="@color/white"-->
+
+<!--        app:layout_constraintEnd_toStartOf="@+id/downloadButton"-->
+<!--        app:layout_constraintStart_toEndOf="@+id/projectName"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/downloadAPKButton"
+        android:text="@string/apk"
+        android:layout_marginEnd="8dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
-        android:text="Download"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+
+        android:insetLeft="0dp"
+        android:insetRight="0dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+
+        app:icon="@android:drawable/stat_sys_download"
+        app:iconGravity="textEnd"
+        app:iconPadding="5dp"
+
+        app:layout_constraintEnd_toStartOf="@+id/downloadButton"
         app:layout_constraintStart_toEndOf="@+id/projectName"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/downloadButton"
+        android:layout_marginEnd="20dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+
+        android:insetLeft="0dp"
+        android:insetRight="0dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+
+        app:icon="@android:drawable/stat_sys_download"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconTint="@color/white"
+
+        app:layout_constraintStart_toEndOf="@+id/downloadAPKButton"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -46,6 +46,8 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/downloadAPKButton"
+        android:background="@color/blue_grey_600"
+        android:foreground="?attr/selectableItemBackground"
         android:text="@string/apk"
         android:layout_marginEnd="8dp"
         android:layout_width="wrap_content"
@@ -68,6 +70,8 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/downloadButton"
+        android:background="@color/blue_grey_600"
+        android:foreground="?attr/selectableItemBackground"
         android:layout_marginEnd="20dp"
         android:layout_width="40dp"
         android:layout_height="40dp"

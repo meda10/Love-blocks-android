@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView
 import blocks.love.utils.DownloadController
 import blocks.love.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -50,6 +52,12 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = recyclerAdapter
 
         getUserProjects()
+        if (checkGooglePlayServices()) {
+
+        } else {
+            //You won't be able to send notifications to this device
+            Log.w("PLAY", "Device doesn't have google play services")
+        }
     }
 
     override fun onStart() {
@@ -176,7 +184,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
-//                requestPermission(READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
                 requestPermission(WRITE_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
                 Log.d("DOWNLOAD", "Permission granted")
                 return ActivityCompat.checkSelfPermission(this@MainActivity, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
@@ -223,6 +230,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun checkGooglePlayServices(): Boolean {
+        return if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
+            Log.e("PLAY", "Error update play services")
+            val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
+            mainLayout.showSnackbar(R.string.update_play_service, Snackbar.LENGTH_SHORT)
+            false
+        } else true
     }
 
     fun downloadAPK(url: String, fileName: String) {

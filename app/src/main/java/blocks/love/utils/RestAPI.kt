@@ -22,8 +22,8 @@ data class ProjectsData(var id_token: String)
 data class Project(var id: Int, var name: String)
 data class ProjectInfoData(var id: Int, var id_token: String)
 data class ProjectInfoResponse(val url: String, val name: String)
-data class ProjectAPKInfoData(var id: Int, var id_token: String)
-data class ProjectAPKInfoResponse(val url: String, val name: String)
+//data class ProjectAPKInfoData(var id: Int, var id_token: String)
+//data class ProjectAPKInfoResponse(val url: String, val name: String)
 data class RegisterData(var name: String, var email: String, var password: String, var password_confirmation: String, var terms: String, var fcm_token: String)
 data class RegisterResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
 data class LoginData(var email: String, var password: String, var fcm_token: String)
@@ -76,7 +76,7 @@ interface ApiProjects {
 
 interface ApiProjectInfo {
     @Headers("Content-Type: application/json")
-    @POST("file")
+    @POST("project/love")
     fun getProjectInfo(@Body projectInfoData: ProjectInfoData): Call<ProjectInfoResponse>
 
     companion object {
@@ -91,22 +91,22 @@ interface ApiProjectInfo {
     }
 }
 
-interface ApiProjectAPKInfo {
-    @Headers("Content-Type: application/json")
-    @POST("apk")
-    fun getProjectAPKInfo(@Body projectAPKInfoData: ProjectAPKInfoData): Call<ProjectAPKInfoResponse>
-
-    companion object {
-        fun create(): ApiProjectAPKInfo {
-            val retrofit = Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
-                .build()
-            return retrofit.create(ApiProjectAPKInfo::class.java)
-        }
-    }
-}
+//interface ApiProjectAPKInfo {
+//    @Headers("Content-Type: application/json")
+//    @POST("apk")
+//    fun getProjectAPKInfo(@Body projectAPKInfoData: ProjectAPKInfoData): Call<ProjectAPKInfoResponse>
+//
+//    companion object {
+//        fun create(): ApiProjectAPKInfo {
+//            val retrofit = Retrofit.Builder()
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .baseUrl(BASE_URL)
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .build()
+//            return retrofit.create(ApiProjectAPKInfo::class.java)
+//        }
+//    }
+//}
 
 interface ApiDownloadProject {
 
@@ -239,20 +239,20 @@ class RestApiManager {
         )
     }
 
-    fun getProjectAPKInfo(projectAPKInfoData: ProjectAPKInfoData, onResult: (ProjectAPKInfoResponse?) -> Unit){
-        val retrofit = ApiProjectAPKInfo.create().getProjectAPKInfo(projectAPKInfoData)
-        retrofit.enqueue(
-            object : Callback<ProjectAPKInfoResponse> {
-                override fun onFailure(call: Call<ProjectAPKInfoResponse>, t: Throwable) {
-                    onResult(null)
-                }
-                override fun onResponse(call: Call<ProjectAPKInfoResponse>, response: Response<ProjectAPKInfoResponse>) {
-                    Log.d("APK", response.body().toString())
-                    onResult(response.body())
-                }
-            }
-        )
-    }
+//    fun getProjectAPKInfo(projectAPKInfoData: ProjectAPKInfoData, onResult: (ProjectAPKInfoResponse?) -> Unit){
+//        val retrofit = ApiProjectAPKInfo.create().getProjectAPKInfo(projectAPKInfoData)
+//        retrofit.enqueue(
+//            object : Callback<ProjectAPKInfoResponse> {
+//                override fun onFailure(call: Call<ProjectAPKInfoResponse>, t: Throwable) {
+//                    onResult(null)
+//                }
+//                override fun onResponse(call: Call<ProjectAPKInfoResponse>, response: Response<ProjectAPKInfoResponse>) {
+//                    Log.d("APK", response.body().toString())
+//                    onResult(response.body())
+//                }
+//            }
+//        )
+//    }
 
     fun downloadProject(fileUrl: String, onResult: (ResponseBody?) -> Unit){
         val retrofit = ApiDownloadProject.create().downloadProject(fileUrl)

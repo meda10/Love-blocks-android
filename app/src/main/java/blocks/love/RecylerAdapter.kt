@@ -1,16 +1,12 @@
 package blocks.love
 
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
-import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -41,14 +37,13 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
     class ProjectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         private val projectName: TextView = itemView.findViewById(R.id.projectName)
         private val downloadButton: Button = itemView.findViewById(R.id.downloadButton)
-        private val downloadAPKButton: Button = itemView.findViewById(R.id.downloadAPKButton)
 
         fun bind(project: Project, context: Context) {
             projectName.text = project.name
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                downloadButton.visibility = View.GONE
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                downloadButton.visibility = View.GONE
+//            }
 
             downloadButton.setOnClickListener {
                 if (context is MainActivity){
@@ -64,14 +59,7 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                             RestApiManager().getProjectInfo(projectInfoData) { responseData ->
                                 if (responseData?.url != null ) {
                                     //todo URL
-                                    RestApiManager().downloadProject("https://192.168.0.20/download") { fileData ->
-                                        if (fileData != null){
-                                            context.writeFile(fileData, "New_File.jpg")
-                                        }
-                                        else{
-                                            Log.d("DOWNLOAD", "Null")
-                                        }
-                                    }
+                                    context.downloadAPK(responseData.url.replace("localhost", "192.168.0.20"), responseData.name)
                                 }
                             }
                         }
@@ -79,46 +67,46 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                 }
             }
 
-            downloadAPKButton.setOnClickListener {
-                if (context is MainActivity){
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        val user = Firebase.auth.currentUser
-                        user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
-                            if (getIDToken.isSuccessful) {
-                                val idToken = getIDToken.result.token
-                                val projectAPKInfoData = ProjectAPKInfoData(
-                                    id_token = idToken!!,
-                                    id = project.id,
-                                )
-                                Log.d("APK", "APK id: ${project.id}")
-                                context.downloadAPK("adw", "LoveBlocksProject.apk")
-                            }
-                        }
-                    } else {
-                        context.requestPermission(WRITE_EXTERNAL_STORAGE, MainActivity.WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
-                        if (ActivityCompat.checkSelfPermission(context, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED) {
-                            val user = Firebase.auth.currentUser
-                            user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
-                                if (getIDToken.isSuccessful) {
-                                    val idToken = getIDToken.result.token
-                                    val projectAPKInfoData = ProjectAPKInfoData(
-                                        id_token = idToken!!,
-                                        id = project.id,
-                                    )
-                                    Log.d("APK", "APK id: ${project.id}")
-                                    context.downloadAPK("adw", "LoveBlocksProject.apk")
-//                                RestApiManager().getProjectAPKInfo(projectAPKInfoData) { responseData ->
-//                                    if (responseData?.url != null ) {
-                                          //todo URL
-//                                        context.downloadAPK(responseData.url)
-//                                    }
+//            downloadAPKButton.setOnClickListener {
+//                if (context is MainActivity){
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                        val user = Firebase.auth.currentUser
+//                        user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
+//                            if (getIDToken.isSuccessful) {
+//                                val idToken = getIDToken.result.token
+//                                val projectInfoData = ProjectInfoData(
+//                                    id_token = idToken!!,
+//                                    id = project.id,
+//                                )
+//                                Log.d("APK", "APK id: ${project.id}")
+//                                context.downloadAPK("adw", "LoveBlocksProject.apk")
+//                            }
+//                        }
+//                    } else {
+//                        context.requestPermission(WRITE_EXTERNAL_STORAGE, MainActivity.WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
+//                        if (ActivityCompat.checkSelfPermission(context, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED) {
+//                            val user = Firebase.auth.currentUser
+//                            user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
+//                                if (getIDToken.isSuccessful) {
+//                                    val idToken = getIDToken.result.token
+//                                    val projectInfoData = ProjectInfoData(
+//                                        id_token = idToken!!,
+//                                        id = project.id,
+//                                    )
+//                                    Log.d("APK", "APK id: ${project.id}")
+//                                    context.downloadAPK("adw", "LoveBlocksProject.apk")
+////                                RestApiManager().getProjectAPKInfo(projectAPKInfoData) { responseData ->
+////                                    if (responseData?.url != null ) {
+//                                          //todo URL
+////                                        context.downloadAPK(responseData.url)
+////                                    }
+////                                }
 //                                }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 }

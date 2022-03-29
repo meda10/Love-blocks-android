@@ -3,6 +3,7 @@ package blocks.love
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.NameNotFoundException
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
 import android.os.Build
@@ -18,8 +19,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
-import blocks.love.utils.DownloadController
+import blocks.love.utils.FileDownloader
+import blocks.love.utils.showDialogInstall
 import blocks.love.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.ConnectionResult
@@ -27,14 +30,24 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import io.reactivex.BackpressureStrategy
+import io.reactivex.android.schedulers.AndroidSchedulers.mainThread
+import io.reactivex.disposables.Disposables
+import io.reactivex.plugins.RxJavaPlugins
+import io.reactivex.schedulers.Schedulers
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import java.io.*
+import java.util.concurrent.TimeUnit
+
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
     lateinit var recyclerAdapter: RecyclerAdapter
-    lateinit var downloadController: DownloadController
+    lateinit var mainLayout: ConstraintLayout
+    private var disposable = Disposables.disposed()
+    private val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
 
     companion object {
         const val WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 10
@@ -46,18 +59,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_screen)
 
+        mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
         recyclerView = findViewById(R.id.recycler_view)
         recyclerAdapter = RecyclerAdapter(this)
-//        recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = recyclerAdapter
 
         getUserProjects()
-        if (checkGooglePlayServices()) {
-
-        } else {
-            //You won't be able to send notifications to this device
+        if (!checkGooglePlayServices()) {
             Log.w("PLAY", "Device doesn't have google play services")
         }
+        if (!isPackageInstalled("org.love2d.android")){
+            mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
+            Log.w("PLAY", "Device doesn't have Love for Android installed")
+        }
+
+        RxJavaPlugins.setErrorHandler {
+            Log.e("Error", it.localizedMessage)
+        }
+
     }
 
     override fun onStart() {
@@ -65,11 +84,9 @@ class MainActivity : AppCompatActivity() {
 
         val projectBtn = findViewById<View>(R.id.projectBtn) as Button
         val view_btn = findViewById<View>(R.id.view_btn) as Button
-        val btnDownload = findViewById<View>(R.id.btnDownload) as Button
         view_btn.text = "Sign Out"
         view_btn.setOnClickListener { signOutButton() }
         projectBtn.setOnClickListener { getUserProjects() }
-//        btnDownload.setOnClickListener { downloadFile() }
     }
 
     // Signs Out user -> On button click
@@ -194,7 +211,6 @@ class MainActivity : AppCompatActivity() {
     fun requestPermission(permission: String, requestCode: Int, message: Int) {
         if (ActivityCompat.checkSelfPermission(this@MainActivity, permission) == PackageManager.PERMISSION_DENIED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, permission)) {
-                val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
                 mainLayout.showSnackbar(message, Snackbar.LENGTH_INDEFINITE, R.string.ok) {
                     ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
                 }
@@ -211,7 +227,6 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                     Toast.makeText(this@MainActivity, "Write storage Permission Granted", Toast.LENGTH_SHORT).show()
                 } else {
-                    val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
                     mainLayout.showSnackbar(R.string.storage_permission_denied, Snackbar.LENGTH_SHORT)
                 }
             }
@@ -235,16 +250,63 @@ class MainActivity : AppCompatActivity() {
     private fun checkGooglePlayServices(): Boolean {
         return if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             Log.e("PLAY", "Error update play services")
-            val mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
             mainLayout.showSnackbar(R.string.update_play_service, Snackbar.LENGTH_SHORT)
             false
         } else true
     }
 
     fun downloadAPK(url: String, fileName: String) {
-        val url = "https://loveblocks.tk/storage/game.apk"
-        downloadController = DownloadController(this, url)
-        Log.d("APK", "APK url: $url")
-        downloadController.enqueueDownload(fileName)
+//        val url = "https://loveblocks.tk/storage/game.apk"
+//        downloadController = DownloadController(this, url)
+//        Log.d("APK", "APK url: $url")
+//        downloadController.enqueueDownload(fileName)
+
+        val destination = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + "project.love"
+        val file = File(destination)
+        if (file.exists()) file.delete()
+        val targetFile = File(destination)
+        Log.d("DOWNLOAD", "destination: $destination")
+
+        disposable = fileDownloader.download(url, targetFile)
+            .throttleFirst(2, TimeUnit.SECONDS)
+            .toFlowable(BackpressureStrategy.LATEST)
+            .subscribeOn(Schedulers.io())
+            .observeOn(mainThread())
+            .subscribe({
+                Toast.makeText(this, "$it% Downloaded", Toast.LENGTH_SHORT).show()
+            }, {
+                Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show()
+            }, {
+                Toast.makeText(this, "Complete Downloaded", Toast.LENGTH_SHORT).show()
+                openApp(destination)
+            })
+
     }
+
+    private fun openApp(destination: String){
+        val file = File(destination)
+        val uri = FileProvider.getUriForFile(this, "blocks.love.fileProvider", file)
+        Log.d("DOWNLOAD", "uri: $uri mime: application/x-love-game");
+
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+        intent.setDataAndType(uri, "application/x-love-game")
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(intent)
+    }
+
+    private fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            this.packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (e: NameNotFoundException) {
+            false
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.dispose()
+    }
+
 }

@@ -11,41 +11,41 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <FrameLayout
-            android:id="@+id/header_image"
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            app:layout_constraintBottom_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintEnd_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            >
+<!--        <FrameLayout-->
+<!--            android:id="@+id/header_image"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="200dp"-->
+<!--            app:layout_constraintBottom_toTopOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintEnd_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            >-->
 
-            <!--        <ImageView-->
-            <!--            android:layout_width="match_parent"-->
-            <!--            android:layout_height="match_parent"-->
-            <!--            android:contentDescription="Image"-->
-            <!--            android:scaleType="fitXY"-->
-            <!--            android:src=""-->
-            <!--        />-->
+<!--            &lt;!&ndash;        <ImageView&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:layout_width="match_parent"&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:layout_height="match_parent"&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:contentDescription="Image"&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:scaleType="fitXY"&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:src=""&ndash;&gt;-->
+<!--            &lt;!&ndash;        />&ndash;&gt;-->
 
-            <!--        <ImageView-->
-            <!--            android:layout_width="220dp"-->
-            <!--            android:layout_height=""-->
-        </FrameLayout>
+<!--            &lt;!&ndash;        <ImageView&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:layout_width="220dp"&ndash;&gt;-->
+<!--            &lt;!&ndash;            android:layout_height=""&ndash;&gt;-->
+<!--        </FrameLayout>-->
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/login_title"
-            android:layout_marginTop="35dp"
-            android:text="LOGIN SCREEN"
+            android:layout_marginTop="60dp"
+            android:text="@string/login"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/header_image"
+            app:layout_constraintTop_toTopOf="parent"
             />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -55,7 +55,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="35dp"
             android:layout_marginEnd="16dp"
-            android:hint="Email"
+            android:hint="@string/email"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/login_title">
@@ -65,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/login_email_edit"
                 android:inputType="textEmailAddress"
-                />
+                android:importantForAutofill="no" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -75,7 +75,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="35dp"
             android:layout_marginEnd="16dp"
-            android:hint="Password"
+            android:hint="@string/password"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/login_email">
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/login_password_edit"
                 android:inputType="textPassword"
-                />
+                android:importantForAutofill="no" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -98,7 +98,7 @@
             android:layout_marginTop="30dp"
             android:background="@color/blue_grey_600"
             android:foreground="?attr/selectableItemBackground"
-            android:text="Login"
+            android:text="@string/login"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -120,15 +120,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/dont_have_account"
+                android:id="@+id/noAccount"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
                 android:padding="5dp"
-                android:text="Don\'t have an account?"
+                android:text="@string/no_acc"
                 />
             <TextView
                 android:layout_width="wrap_content"
-                android:id="@+id/login_go_to_register"
+                android:id="@+id/loginGoToRegister"
                 android:onClick="registerOnClick"
                 android:clickable="true"
                 android:layout_height="wrap_content"
@@ -136,9 +136,9 @@
                 android:layout_marginBottom="16dp"
                 android:foreground="?attr/selectableItemBackground"
                 android:padding="5dp"
-                android:text="Register"
+                android:text="@string/register"
                 android:textStyle="bold"
-                />
+                android:focusable="true" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

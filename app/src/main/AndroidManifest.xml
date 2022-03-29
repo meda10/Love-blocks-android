@@ -22,15 +22,12 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.DoplomkaAndroid.NoActionBar">
-        </activity>
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
@@ -60,6 +57,5 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
         </provider>
-        <!--            android:authorities="${applicationId}.provider"-->
     </application>
 </manifest>

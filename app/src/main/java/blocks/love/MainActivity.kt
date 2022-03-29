@@ -14,7 +14,6 @@ import android.os.Environment.getExternalStorageDirectory
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -27,7 +26,9 @@ import blocks.love.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import io.reactivex.BackpressureStrategy
@@ -43,9 +44,10 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var recyclerView: RecyclerView
-    lateinit var recyclerAdapter: RecyclerAdapter
-    lateinit var mainLayout: ConstraintLayout
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerAdapter: RecyclerAdapter
+    private lateinit var mainLayout: ConstraintLayout
+    private lateinit var auth: FirebaseAuth
     private var disposable = Disposables.disposed()
     private val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
 
@@ -57,36 +59,49 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main_screen)
+        auth = Firebase.auth
+        when (Firebase.auth.currentUser) {
+            null -> goToAuthActivity()
+            else -> {
+                setContentView(R.layout.main_screen)
 
-        mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
-        recyclerView = findViewById(R.id.recycler_view)
-        recyclerAdapter = RecyclerAdapter(this)
-        recyclerView.adapter = recyclerAdapter
+                mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
+                recyclerView = findViewById(R.id.recyclerView)
+                recyclerAdapter = RecyclerAdapter(this)
+                recyclerView.adapter = recyclerAdapter
 
-        getUserProjects()
-        if (!checkGooglePlayServices()) {
-            Log.w("PLAY", "Device doesn't have google play services")
+                getUserProjects()
+                if (!checkGooglePlayServices()) {
+                    Log.w("PLAY", "Device doesn't have google play services")
+                }
+                if (!isPackageInstalled("org.love2d.android")){
+                    mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
+                    Log.w("PLAY", "Device doesn't have Love for Android installed")
+                }
+
+                RxJavaPlugins.setErrorHandler {
+                    Log.e("Error", it.localizedMessage)
+                }
+            }
         }
-        if (!isPackageInstalled("org.love2d.android")){
-            mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
-            Log.w("PLAY", "Device doesn't have Love for Android installed")
-        }
-
-        RxJavaPlugins.setErrorHandler {
-            Log.e("Error", it.localizedMessage)
-        }
-
     }
 
     override fun onStart() {
         super.onStart()
-
-        val projectBtn = findViewById<View>(R.id.projectBtn) as Button
-        val view_btn = findViewById<View>(R.id.view_btn) as Button
-        view_btn.text = "Sign Out"
-        view_btn.setOnClickListener { signOutButton() }
-        projectBtn.setOnClickListener { getUserProjects() }
+        auth = Firebase.auth
+        when (Firebase.auth.currentUser) {
+            null -> goToAuthActivity()
+            else -> {
+                val topAppBar = findViewById<View>(R.id.topAppBar) as MaterialToolbar
+                topAppBar.setOnMenuItemClickListener { menuItem ->
+                    when (menuItem.itemId) {
+                        R.id.menu_projects -> { getUserProjects(); true }
+                        R.id.menu_sign_out -> { signOutButton(); true }
+                        else -> false
+                    }
+                }
+            }
+        }
     }
 
     // Signs Out user -> On button click
@@ -111,10 +126,12 @@ class MainActivity : AppCompatActivity() {
                         Log.d("PROJECTS", "OK")
                         recyclerAdapter.setProjectListItems(responseData)
                     } else {
+                        //todo Error
                         Log.d("PROJECTS", "NULL")
                     }
                 }
             } else {
+                //todo
                 Log.d("PROJECTS", getIDToken.exception.toString())
             }
         }
@@ -255,19 +272,13 @@ class MainActivity : AppCompatActivity() {
         } else true
     }
 
-    fun downloadAPK(url: String, fileName: String) {
-//        val url = "https://loveblocks.tk/storage/game.apk"
-//        downloadController = DownloadController(this, url)
-//        Log.d("APK", "APK url: $url")
-//        downloadController.enqueueDownload(fileName)
+    fun downloadLoveProject(url: String, fileName: String) {
+        val loveFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + fileName
+        val loveFile = File(loveFilePath)
+        if (loveFile.exists()) loveFile.delete()
+        Log.d("DOWNLOAD", "destination: $loveFilePath")
 
-        val destination = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + "project.love"
-        val file = File(destination)
-        if (file.exists()) file.delete()
-        val targetFile = File(destination)
-        Log.d("DOWNLOAD", "destination: $destination")
-
-        disposable = fileDownloader.download(url, targetFile)
+        disposable = fileDownloader.download(url, loveFile)
             .throttleFirst(2, TimeUnit.SECONDS)
             .toFlowable(BackpressureStrategy.LATEST)
             .subscribeOn(Schedulers.io())
@@ -278,13 +289,12 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show()
             }, {
                 Toast.makeText(this, "Complete Downloaded", Toast.LENGTH_SHORT).show()
-                openApp(destination)
+                openLove2dApp(loveFilePath)
             })
-
     }
 
-    private fun openApp(destination: String){
-        val file = File(destination)
+    private fun openLove2dApp(loveFilePath: String){
+        val file = File(loveFilePath)
         val uri = FileProvider.getUriForFile(this, "blocks.love.fileProvider", file)
         Log.d("DOWNLOAD", "uri: $uri mime: application/x-love-game");
 
@@ -300,6 +310,7 @@ class MainActivity : AppCompatActivity() {
             this.packageManager.getPackageInfo(packageName, 0)
             true
         } catch (e: NameNotFoundException) {
+            Log.w("PLAY", "Not installed: $e")
             false
         }
     }
@@ -308,5 +319,4 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         disposable.dispose()
     }
-
 }

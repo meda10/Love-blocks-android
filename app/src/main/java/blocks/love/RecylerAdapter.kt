@@ -59,7 +59,7 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                             RestApiManager().getProjectInfo(projectInfoData) { responseData ->
                                 if (responseData?.url != null ) {
                                     //todo URL
-                                    context.downloadAPK(responseData.url.replace("localhost", "192.168.0.20"), responseData.name)
+                                    context.downloadLoveProject(responseData.url.replace("localhost", "192.168.0.20"), responseData.name)
                                 }
                             }
                         }

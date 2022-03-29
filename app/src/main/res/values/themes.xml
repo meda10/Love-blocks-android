@@ -22,4 +22,7 @@
     <style name="Theme.DoplomkaAndroid.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.DoplomkaAndroid.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="Theme.App" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
 </resources>

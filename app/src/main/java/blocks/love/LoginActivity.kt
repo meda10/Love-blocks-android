@@ -6,10 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import blocks.love.utils.showDialog
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -23,12 +24,15 @@ const val fcm_token = "fcm_token"
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var authLayout: ScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
         val user = Firebase.auth.currentUser
         setContentView(R.layout.activity_login)
+        authLayout = findViewById<View>(R.id.loginLayout) as ScrollView
+
 
         when {
             user != null -> userIsLoggedIn()
@@ -146,23 +150,21 @@ class LoginActivity : AppCompatActivity() {
                         responseData?.access_token != null -> {
                             Log.d("LOGIN", "WIN")
                             Log.d("LOGIN", responseData.id)
-                            Toast.makeText(baseContext, "LOGIN WIN", Toast.LENGTH_SHORT).show()
-
+//                            Toast.makeText(baseContext, "LOGIN WIN", Toast.LENGTH_SHORT).show()
                             loginWithCustomToken(responseData.access_token)
                         }
-                        //todo Error
                         responseData?.errors?.error != null -> {
                             Log.d("LOGIN", responseData.errors.error)
-                            Toast.makeText(baseContext, "LOGIN FAIL", Toast.LENGTH_SHORT).show()
+                            authLayout.showDialog(responseData.errors.error, R.string.something_wrong_title, this)
                         }
                         else -> {
                             Log.d("LOGIN", "NULL")
-                            Toast.makeText(baseContext, "LOGIN NULL", Toast.LENGTH_SHORT).show()
+                            authLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, this)
                         }
                     }
                 }
             } else {
-                // todo Handle error
+                // todo Handle FCM error
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
@@ -218,7 +220,7 @@ class LoginActivity : AppCompatActivity() {
                 }
                 Log.d("TOKEN", "Sending FCM Token: $fcmToken")
             } else {
-                // todo Handle error
+                // todo Handle FCM error
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }

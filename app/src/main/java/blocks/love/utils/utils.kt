@@ -30,6 +30,10 @@ fun View.showSnackbar(msg: String, length: Int, actionMessage: CharSequence?, ac
     }
 }
 
+fun View.showDialog(msg: String, titleId: Int, context: Context) {
+    showDialog(msg, context.getString(titleId), context)
+}
+
 fun View.showDialog(msgId: Int, titleId: Int, context: Context) {
     showDialog(context.getString(msgId), context.getString(titleId), context)
 }

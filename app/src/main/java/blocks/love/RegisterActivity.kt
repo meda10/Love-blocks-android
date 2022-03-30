@@ -6,8 +6,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import blocks.love.utils.showDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -16,11 +18,13 @@ import com.google.firebase.messaging.FirebaseMessaging
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var authLayout: ScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
         auth = Firebase.auth
+        authLayout = findViewById<View>(R.id.registerLayout) as ScrollView
     }
 
     override fun onStart() {
@@ -73,31 +77,33 @@ class RegisterActivity : AppCompatActivity() {
                         responseData?.access_token != null -> {
                             Log.d("REG", "WIN")
                             Log.d("REG", responseData.id)
-                            Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
-
+//                            Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
                             loginWithCustomToken(responseData.access_token)
                         }
-                        //todo Error
                         responseData?.errors?.error != null -> {
                             Log.d("REG", responseData.errors.error)
+                            authLayout.showDialog(responseData.errors.error, R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.email != null -> {
                             for (i in 0 until responseData.errors.email.count()) Log.d("REG", responseData.errors.email[i])
+                            authLayout.showDialog(responseData.errors.email[0], R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.name != null -> {
                             for (i in 0 until responseData.errors.name.count()) Log.d("REG", responseData.errors.name[i])
+                            authLayout.showDialog(responseData.errors.name[0], R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.password != null -> {
                             for (i in 0 until responseData.errors.password.count()) Log.d("REG", responseData.errors.password[i])
+                            authLayout.showDialog(responseData.errors.password[0], R.string.something_wrong_title, this)
                         }
                         else -> {
                             Log.d("REG", "NULL")
-                            Toast.makeText(baseContext, "REG NULL", Toast.LENGTH_SHORT).show()
+                            authLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, this)
                         }
                     }
                 }
             } else {
-                // todo Handle error
+                // todo Handle FCM error
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }

@@ -1,10 +1,13 @@
 package blocks.love
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -21,6 +24,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import blocks.love.utils.FileDownloader
+import blocks.love.utils.showDialog
 import blocks.love.utils.showDialogInstall
 import blocks.love.utils.showSnackbar
 import com.firebase.ui.auth.AuthUI
@@ -44,9 +48,9 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
+    lateinit var mainLayout: ConstraintLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var recyclerAdapter: RecyclerAdapter
-    private lateinit var mainLayout: ConstraintLayout
     private lateinit var auth: FirebaseAuth
     private var disposable = Disposables.disposed()
     private val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
@@ -70,15 +74,18 @@ class MainActivity : AppCompatActivity() {
                 recyclerAdapter = RecyclerAdapter(this)
                 recyclerView.adapter = recyclerAdapter
 
-                getUserProjects()
+                if(!isOnline()){
+                    mainLayout.showDialog(R.string.connect_to_internet, R.string.connect_to_internet_title, this)
+                }
                 if (!checkGooglePlayServices()) {
+                    mainLayout.showDialog(R.string.play_services, R.string.play_services_title, this)
                     Log.w("PLAY", "Device doesn't have google play services")
                 }
                 if (!isPackageInstalled("org.love2d.android")){
                     mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
                     Log.w("PLAY", "Device doesn't have Love for Android installed")
                 }
-
+                getUserProjects()
                 RxJavaPlugins.setErrorHandler {
                     Log.e("Error", it.localizedMessage)
                 }
@@ -126,7 +133,7 @@ class MainActivity : AppCompatActivity() {
                         Log.d("PROJECTS", "OK")
                         recyclerAdapter.setProjectListItems(responseData)
                     } else {
-                        //todo Error
+                        mainLayout.showDialog(R.string.connect_to_server, R.string.connect_to_internet_title, this)
                         Log.d("PROJECTS", "NULL")
                     }
                 }
@@ -314,6 +321,21 @@ class MainActivity : AppCompatActivity() {
             false
         }
     }
+
+    fun isOnline(): Boolean {
+        val connectivityManager = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (capabilities != null) {
+            when {
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> return true
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> return true
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> return true
+            }
+        }
+        return false
+    }
+
+
 
     override fun onDestroy() {
         super.onDestroy()

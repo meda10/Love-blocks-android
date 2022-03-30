@@ -10,12 +10,10 @@ import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import blocks.love.utils.showDialog
-//import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-
 
 const val sharedPrefFile = "login_shared_preferences"
 const val logged = "logged"
@@ -84,6 +82,7 @@ class LoginActivity : AppCompatActivity() {
         if (sharedPreferences.getBoolean(logged, false)) {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
     }
 
@@ -131,6 +130,7 @@ class LoginActivity : AppCompatActivity() {
     fun registerOnClick(view: View?) {
         val intent = Intent(this, RegisterActivity::class.java)
         startActivity(intent)
+        overridePendingTransition(0, 0)
     }
 
     private fun login(email: String, password: String) {

@@ -113,6 +113,7 @@ class RegisterActivity : AppCompatActivity() {
     fun loginOnClick(view: View?) {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
+        overridePendingTransition(0, 0)
     }
 
     private fun loginWithCustomToken(firebaseToken: String){
@@ -139,6 +140,7 @@ class RegisterActivity : AppCompatActivity() {
         if (sharedPreferences.getBoolean(logged, false)) {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
     }
 }

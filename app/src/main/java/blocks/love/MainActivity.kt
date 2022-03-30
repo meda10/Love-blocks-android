@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import io.reactivex.plugins.RxJavaPlugins
 import okhttp3.OkHttpClient
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -102,11 +104,13 @@ class MainActivity : AppCompatActivity() {
         val url = intent.getStringExtra("url")
         val name = intent.getStringExtra("name")
         if (url != null && name != null) {
+            val fileName = name.replace(" ", "_")
+            val loveFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + fileName + ".love"
             downloadLoveProject(
                 url.replace("localhost", "192.168.0.20"),
-                name.replace(" ", "_"),
                 applicationContext,
-                fileDownloader
+                fileDownloader,
+                loveFilePath
             )
         }
     }

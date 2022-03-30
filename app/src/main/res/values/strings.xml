@@ -59,4 +59,5 @@
     <string name="storage_access_required">Storage access is required to downloading the file.</string>
     <string name="write_access_required">Storage access is required to downloading the file.</string>
     <string name="read_access_required">Storage access is required to downloading the file.</string>
+    <string name="open">OPEN</string>
 </resources>

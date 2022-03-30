@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -79,8 +78,7 @@ fun View.showDialogInstall(msgId: Int, titleId: Int, context: Context, packageNa
     alert.show()
 }
 
-fun downloadLoveProject(url: String, fileName: String, context: Context, fileDownloader: FileDownloader) {
-    val loveFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + fileName
+fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownloader, loveFilePath: String) {
     val loveFile = File(loveFilePath)
     if (loveFile.exists()) loveFile.delete()
     Log.d("DOWNLOAD", "destination: $loveFilePath")

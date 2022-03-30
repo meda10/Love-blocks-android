@@ -1,6 +1,7 @@
 package blocks.love
 
 import android.content.Context
+import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,13 +10,15 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import blocks.love.utils.downloadLoveProject
+import blocks.love.utils.openLove2dApp
 import blocks.love.utils.showDialog
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import java.io.File
 
 class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapter.ProjectViewHolder>() {
 
-    var projectList : List<Project> = listOf()
+    private var projectList : List<Project> = listOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProjectViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_adapter,parent,false)
@@ -39,82 +42,71 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
     class ProjectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         private val projectName: TextView = itemView.findViewById(R.id.projectName)
         private val downloadButton: Button = itemView.findViewById(R.id.downloadButton)
+        private val deleteButton: Button = itemView.findViewById(R.id.deleteButton)
+        private val openButton: Button = itemView.findViewById(R.id.openButton)
 
         fun bind(project: Project, context: Context) {
             projectName.text = project.name
+            val fileName = projectName.text.toString().replace(" ", "_")
+            val loveFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + fileName + ".love"
 
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//                downloadButton.visibility = View.GONE
-//            }
+            disableOrEnableButtons(loveFilePath)
 
-            downloadButton.setOnClickListener {
-                if (context is MainActivity){
-                    val user = Firebase.auth.currentUser
-                    user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
-                        if (getIDToken.isSuccessful) {
-                            val idToken = getIDToken.result.token
-                            val projectInfoData = ProjectInfoData(
-                                id_token = idToken!!,
-                                id = project.id,
-                            )
-                            Log.d("DOWNLOAD", "project id: ${project.id}")
-                            RestApiManager().getProjectInfo(projectInfoData) { responseData ->
-                                if (responseData?.url != null ) {
-                                    downloadLoveProject(
-                                        responseData.url.replace("localhost", "192.168.0.20"),
-                                        responseData.name.replace(" ", "_"),
-                                        context,
-                                        context.fileDownloader
-                                    )
-                                } else {
-                                    context.mainLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, context)
-                                }
+            downloadButton.setOnClickListener { downloadProject(project, context, loveFilePath) }
+            deleteButton.setOnClickListener { deleteProject(context, loveFilePath) }
+            openButton.setOnClickListener { openLove2dApp(loveFilePath, context) }
+        }
+
+        private fun downloadProject(project: Project, context: Context, loveFilePath: String){
+            if (context is MainActivity){
+                val user = Firebase.auth.currentUser
+                user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
+                    if (getIDToken.isSuccessful) {
+                        val idToken = getIDToken.result.token
+                        val projectInfoData = ProjectInfoData(
+                            id_token = idToken!!,
+                            id = project.id,
+                        )
+                        Log.d("DOWNLOAD", "project id: ${project.id}")
+                        RestApiManager().getProjectInfo(projectInfoData) { responseData ->
+                            if (responseData?.url != null ) {
+                                downloadLoveProject(
+                                    responseData.url.replace("localhost", "192.168.0.20"),
+                                    context,
+                                    context.fileDownloader,
+                                    loveFilePath
+                                )
+                                disableOrEnableButtons(loveFilePath)
+                            } else {
+                                context.mainLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, context)
                             }
                         }
                     }
                 }
             }
+        }
 
-//            downloadAPKButton.setOnClickListener {
-//                if (context is MainActivity){
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//                        val user = Firebase.auth.currentUser
-//                        user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
-//                            if (getIDToken.isSuccessful) {
-//                                val idToken = getIDToken.result.token
-//                                val projectInfoData = ProjectInfoData(
-//                                    id_token = idToken!!,
-//                                    id = project.id,
-//                                )
-//                                Log.d("APK", "APK id: ${project.id}")
-//                                context.downloadAPK("adw", "LoveBlocksProject.apk")
-//                            }
-//                        }
-//                    } else {
-//                        context.requestPermission(WRITE_EXTERNAL_STORAGE, MainActivity.WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
-//                        if (ActivityCompat.checkSelfPermission(context, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED) {
-//                            val user = Firebase.auth.currentUser
-//                            user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
-//                                if (getIDToken.isSuccessful) {
-//                                    val idToken = getIDToken.result.token
-//                                    val projectInfoData = ProjectInfoData(
-//                                        id_token = idToken!!,
-//                                        id = project.id,
-//                                    )
-//                                    Log.d("APK", "APK id: ${project.id}")
-//                                    context.downloadAPK("adw", "LoveBlocksProject.apk")
-////                                RestApiManager().getProjectAPKInfo(projectAPKInfoData) { responseData ->
-////                                    if (responseData?.url != null ) {
-//                                          //todo URL
-////                                        context.downloadAPK(responseData.url)
-////                                    }
-////                                }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+        private fun disableOrEnableButtons(loveFilePath: String){
+            if(!checkIfProjectExists(loveFilePath)) {
+                deleteButton.isEnabled = false
+                openButton.isEnabled = false
+            } else {
+                deleteButton.isEnabled = true
+                openButton.isEnabled = true
+            }
+        }
+
+        private fun checkIfProjectExists(loveFilePath: String): Boolean {
+            if (File(loveFilePath).exists()) return true
+            return false
+        }
+
+        private fun deleteProject(context: Context, loveFilePath: String){
+            if (context is MainActivity){
+                val loveFile = File(loveFilePath)
+                if (loveFile.exists()) loveFile.delete()
+                disableOrEnableButtons(loveFilePath)
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import blocks.love.utils.downloadLoveProject
 import blocks.love.utils.showDialog
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -59,9 +60,11 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                             Log.d("DOWNLOAD", "project id: ${project.id}")
                             RestApiManager().getProjectInfo(projectInfoData) { responseData ->
                                 if (responseData?.url != null ) {
-                                    context.downloadLoveProject(
+                                    downloadLoveProject(
                                         responseData.url.replace("localhost", "192.168.0.20"),
-                                        responseData.name.replace(" ", "_")
+                                        responseData.name.replace(" ", "_"),
+                                        context,
+                                        context.fileDownloader
                                     )
                                 } else {
                                     context.mainLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, context)

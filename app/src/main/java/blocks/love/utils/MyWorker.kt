@@ -5,25 +5,24 @@ import android.util.Log
 
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import okhttp3.OkHttpClient
 
 class MyWorker(appContext: Context, workerParams: WorkerParameters) : Worker(appContext, workerParams) {
 
-    companion object {
-        private const val TAG = "WORKER"
-    }
+    private val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
 
     override fun doWork(): Result {
-        Log.d(TAG, "Running Worker")
-
-        when {
-            inputData.getString("apk") != null -> {
-
-            }
-            inputData.getString("file") != null -> {
-
-            }
+        Log.d("FCM", "Running Worker")
+        val url = inputData.getString("url")
+        val name = inputData.getString("name")
+        if (url != null && name != null) {
+            downloadLoveProject(
+                url.replace("localhost", "192.168.0.20"),
+                name.replace(" ", "_"),
+                applicationContext,
+                fileDownloader
+            )
         }
-
         return Result.success()
     }
 }

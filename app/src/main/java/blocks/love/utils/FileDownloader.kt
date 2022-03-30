@@ -16,33 +16,7 @@ class FileDownloader(okHttpClient: OkHttpClient) {
         private const val HTTP_TIMEOUT = 30
     }
 
-//    // TODO remove -> only for local development
-//    object UnsafeOkHttpClient {
-//        val unsafeOkHttpClient: OkHttpClient
-//            get() = try {
-//                val trustAllCerts = arrayOf<TrustManager>(
-//                    object : X509TrustManager {
-//                        @Throws(CertificateException::class)
-//                        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-//                        @Throws(CertificateException::class)
-//                        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-//                        override fun getAcceptedIssuers(): Array<X509Certificate> { return arrayOf() }
-//                    }
-//                )
-//                val sslContext = SSLContext.getInstance("SSL")
-//                sslContext.init(null, trustAllCerts, SecureRandom())
-//                val sslSocketFactory: SSLSocketFactory = sslContext.socketFactory
-//                val builder = OkHttpClient.Builder()
-//                builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-//                builder.hostnameVerifier { hostname, session -> true }
-//                builder.build()
-//            } catch (e: Exception) {
-//                throw RuntimeException(e)
-//            }
-//    }
-
     private var okHttpClient: OkHttpClient
-//    private var unsafeXHttpClient = blocks.love.UnsafeOkHttpClient.unsafeOkHttpClient // TODO remove -> only for local development
 
     init {
         val okHttpBuilder = okHttpClient.newBuilder()
@@ -52,10 +26,10 @@ class FileDownloader(okHttpClient: OkHttpClient) {
     }
 
     fun download(url: String, file: File): Observable<Int> {
-        return Observable.create<Int> { emitter ->
+        return Observable.create { emitter ->
             val request = Request.Builder().url(url).build()
 //            val response = okHttpClient.newCall(request).execute()
-            val response = unsafeHttpClient.newCall(request).execute()
+            val response = unsafeHttpClient.newCall(request).execute() //todo remove
             val body = response.body()
             val responseCode = response.code()
             if (responseCode >= HttpURLConnection.HTTP_OK &&

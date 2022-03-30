@@ -10,7 +10,7 @@ import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import blocks.love.utils.showDialog
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+//import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -110,23 +110,23 @@ class LoginActivity : AppCompatActivity() {
         )
     }
 
-    // Activity result
-    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
-        val response = result.idpResponse
-        if (result.resultCode == RESULT_OK) {
-            // Successfully signed in
-            val user = FirebaseAuth.getInstance().currentUser!!
-            userIsLoggedIn()
-//            onUserSignedIn(user)
-        } else {
-            // Sign in failed. If response is null the user canceled the
-            // sign-in flow using the back button. Otherwise check
-            // response.getError().getErrorCode() and handle the error.
-//            val response = IdpResponse.fromResultIntent(data)
-            response?.error?.printStackTrace()
-            userIsLoggedOut()
-        }
-    }
+//    // Activity result
+//    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+//        val response = result.idpResponse
+//        if (result.resultCode == RESULT_OK) {
+//            // Successfully signed in
+//            val user = FirebaseAuth.getInstance().currentUser!!
+//            userIsLoggedIn()
+////            onUserSignedIn(user)
+//        } else {
+//            // Sign in failed. If response is null the user canceled the
+//            // sign-in flow using the back button. Otherwise check
+//            // response.getError().getErrorCode() and handle the error.
+////            val response = IdpResponse.fromResultIntent(data)
+//            response?.error?.printStackTrace()
+//            userIsLoggedOut()
+//        }
+//    }
 
     fun registerOnClick(view: View?) {
         val intent = Intent(this, RegisterActivity::class.java)

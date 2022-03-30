@@ -14,18 +14,19 @@ import androidx.core.app.NotificationCompat
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
-import blocks.love.*
 import blocks.love.MainActivity
+import blocks.love.R
+import blocks.love.RestApiManager
+import blocks.love.TokenData
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-
-const val channel_id = "netification_chanel"
-const val channel_name = "blocks.love"
-
 class Messaging : FirebaseMessagingService() {
+
+    private val channelId = "fcm_default_channel"
+    private val channelName = "blocks.love"
 
     companion object {
         private const val TAG = "FCM"
@@ -39,8 +40,7 @@ class Messaging : FirebaseMessagingService() {
 
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
 
-
-        var builder: NotificationCompat.Builder = NotificationCompat.Builder(applicationContext, channel_id)
+        var builder: NotificationCompat.Builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(R.drawable.ic_stat_ic_notification)
             .setAutoCancel(true)
             .setVibrate(longArrayOf(1000,1000,1000,1000,1000))
@@ -51,7 +51,7 @@ class Messaging : FirebaseMessagingService() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(channel_id, channel_name, NotificationManager.IMPORTANCE_HIGH)
+            val notificationChannel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(notificationChannel)
         }
 
@@ -83,6 +83,7 @@ class Messaging : FirebaseMessagingService() {
 
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+//            handleNow(remoteMessage.data)
             scheduleJob(remoteMessage.data)
         }
 
@@ -116,17 +117,15 @@ class Messaging : FirebaseMessagingService() {
      * Schedule async work using WorkManager.
      */
     private fun scheduleJob(messageData: Map<String, String>) {
-        val worker = OneTimeWorkRequest.Builder(MyWorker::class.java)
-        val data = Data.Builder()
-        when {
-            messageData["apk"] != null -> { data.putString("apk", messageData["apk"]) }
-            messageData["file"] != null -> { data.putString("file", messageData["file"]) }
+        if (messageData["url"] != null && messageData["name"] != null){
+            val worker = OneTimeWorkRequest.Builder(MyWorker::class.java)
+            val data = Data.Builder()
+            data.putString("url", messageData["url"])
+            data.putString("name", messageData["name"])
+            Log.d("FCM", "Url: ${messageData["url"]} Name: ${messageData["name"]}")
+            worker.setInputData(data.build())
+            WorkManager.getInstance(this).enqueue(worker.build())
         }
-        worker.setInputData(data.build())
-        WorkManager.getInstance(this).enqueue(worker.build())
-
-//        val work = OneTimeWorkRequest.Builder(MyWorker::class.java).build()
-//        WorkManager.getInstance(this).beginWith(work).enqueue()
     }
 
     /**
@@ -166,11 +165,11 @@ class Messaging : FirebaseMessagingService() {
         Log.d("TOKEN", "sendRegistrationTokenToServer($fcmToken)")
     }
 
-    /**
-     * Create and show a simple notification containing the received FCM message.
-     *
-     * @param messageBody FCM message body received.
-     */
+//    /**
+//     * Create and show a simple notification containing the received FCM message.
+//     *
+//     * @param messageBody FCM message body received.
+//     */
 //    private fun sendNotification(messageBody: String) {
 //        val intent = Intent(this, MainActivity::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

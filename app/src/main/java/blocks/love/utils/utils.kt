@@ -93,11 +93,9 @@ fun downloadLoveProject(url: String, fileName: String, context: Context, fileDow
         .subscribe({
             Log.d("DOWNLOAD", "$it% Downloaded")
             Toast.makeText(context, "$it% Downloaded", Toast.LENGTH_SHORT).show()
-
         }, {
             Log.d("DOWNLOAD", "$it% Error")
             Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show()
-
         }, {
             Log.d("DOWNLOAD", "Project Downloaded")
             openLove2dApp(loveFilePath, context)

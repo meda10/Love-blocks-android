@@ -37,21 +37,23 @@
     <string name="ok">OK</string>
     <string name="apk">APK</string>
 
-    <string name="install_love">Pleas install Love for android, you can not open games without it.</string>
-    <string name="install_love_title">Love for Android required</string>
-
-
     <string name="menu_projects">Refresh projects</string>
     <string name="menu_sign_out">Sign Out</string>
 
+    <string name="install_love">Pleas install Love for android, you can not open games without it.</string>
+    <string name="install_love_title">Love for Android required</string>
+
     <string name="connect_to_server">Something went wrong, application can not connect to the server. Please try again later.</string>
+    <string name="something_wrong_title">Something went wrong</string>
+
     <string name="connect_to_internet">Application needs internet connection to work properly.</string>
     <string name="connect_to_internet_title">Internet connection</string>
-    <string name="something_wrong_title">Something went wrong</string>
 
     <string name="play_services">Application needs google play services installed properly.</string>
     <string name="play_services_title">Google play services</string>
 
+    <string name="background">Please allow application to work in background.</string>
+    <string name="background_title">Allow work in background</string>
 
     <string name="install_access_required">Install access is required to install application.</string>
     <string name="storage_access_required">Storage access is required to downloading the file.</string>

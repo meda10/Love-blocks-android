@@ -1,5 +1,6 @@
 package blocks.love
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager.NameNotFoundException
@@ -12,10 +13,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
-import blocks.love.utils.FileDownloader
-import blocks.love.utils.showDialog
-import blocks.love.utils.showDialogInstall
-import blocks.love.utils.showSnackBar
+import blocks.love.utils.*
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.appbar.MaterialToolbar
@@ -40,8 +38,9 @@ class MainActivity : AppCompatActivity() {
         when (Firebase.auth.currentUser) {
             null -> goToAuthActivity()
             else -> {
-                setContentView(R.layout.main_screen)
+                checkIfAccessedFromFCMNotification()
 
+                setContentView(R.layout.main_screen)
                 mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
                 recyclerView = findViewById(R.id.recyclerView)
                 recyclerAdapter = RecyclerAdapter(this)
@@ -50,10 +49,12 @@ class MainActivity : AppCompatActivity() {
                 if(!isOnline()){
                     mainLayout.showDialog(R.string.connect_to_internet, R.string.connect_to_internet_title, this)
                 }
+
                 if (!checkGooglePlayServices()) {
                     mainLayout.showDialog(R.string.play_services, R.string.play_services_title, this)
                     Log.w("PLAY", "Device doesn't have google play services")
                 }
+
                 // https://developer.android.com/training/package-visibility
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                     if (!isPackageInstalled("org.love2d.android")){
@@ -61,6 +62,15 @@ class MainActivity : AppCompatActivity() {
                         Log.w("PLAY", "Device doesn't have Love for Android installed")
                     }
                 }
+
+                val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    if (activityManager.isBackgroundRestricted){
+                        mainLayout.showDialogInstall(R.string.background, R.string.background_title, this, "org.love2d.android")
+                        Log.w("PLAY", "Device can't work in background")
+                    }
+                }
+
                 getUserProjects()
 
                 RxJavaPlugins.setErrorHandler { e ->
@@ -88,6 +98,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkIfAccessedFromFCMNotification(){
+        val url = intent.getStringExtra("url")
+        val name = intent.getStringExtra("name")
+        if (url != null && name != null) {
+            downloadLoveProject(
+                url.replace("localhost", "192.168.0.20"),
+                name.replace(" ", "_"),
+                applicationContext,
+                fileDownloader
+            )
+        }
+    }
+
     // Signs Out user -> On button click
     private fun signOutButton() {
         Firebase.auth.signOut()
@@ -98,6 +121,7 @@ class MainActivity : AppCompatActivity() {
     private fun goToAuthActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
+        overridePendingTransition(0, 0);
     }
 
     private fun getUserProjects(){

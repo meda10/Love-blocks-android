@@ -105,6 +105,8 @@ class MainActivity : AppCompatActivity() {
         val url = intent.getStringExtra("url")
         val name = intent.getStringExtra("name")
         if (url != null && name != null) {
+            intent.removeExtra("name")
+            intent.removeExtra("url")
             val fileName = name.replace(" ", "_")
             val loveFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + File.separator + fileName + ".love"
             downloadLoveProject(

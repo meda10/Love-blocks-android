@@ -93,6 +93,7 @@ class MainActivity : AppCompatActivity() {
                     when (menuItem.itemId) {
                         R.id.menu_projects -> { getUserProjects(); true }
                         R.id.menu_sign_out -> { signOutButton(); true }
+                        R.id.menu_info -> { infoButton(); true }
                         else -> false
                     }
                 }
@@ -115,11 +116,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Signs Out user -> On button click
     private fun signOutButton() {
         Firebase.auth.signOut()
         goToAuthActivity()
-//        AuthUI.getInstance().signOut(this).addOnCompleteListener { goToAuthActivity() }
+    }
+
+    private fun infoButton(){
+        mainLayout.showDialog(R.string.how_it_works, R.string.how_it_works_title, this)
     }
 
     private fun goToAuthActivity() {

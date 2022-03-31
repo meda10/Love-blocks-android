@@ -52,12 +52,12 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
 
             disableOrEnableButtons(loveFilePath)
 
-            downloadButton.setOnClickListener { downloadProject(project, context, loveFilePath) }
+            downloadButton.setOnClickListener { downloadProject(project, context, loveFilePath, this) }
             deleteButton.setOnClickListener { deleteProject(context, loveFilePath) }
             openButton.setOnClickListener { openLove2dApp(loveFilePath, context) }
         }
 
-        private fun downloadProject(project: Project, context: Context, loveFilePath: String){
+        private fun downloadProject(project: Project, context: Context, loveFilePath: String, projectViewHolder: ProjectViewHolder){
             if (context is MainActivity){
                 val user = Firebase.auth.currentUser
                 user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
@@ -74,9 +74,9 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                                     responseData.url.replace("localhost", "192.168.0.20"),
                                     context,
                                     context.fileDownloader,
-                                    loveFilePath
+                                    loveFilePath,
+                                    projectViewHolder
                                 )
-                                disableOrEnableButtons(loveFilePath)
                             } else {
                                 context.mainLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, context)
                             }
@@ -86,7 +86,7 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
             }
         }
 
-        private fun disableOrEnableButtons(loveFilePath: String){
+        fun disableOrEnableButtons(loveFilePath: String){
             if(!checkIfProjectExists(loveFilePath)) {
                 deleteButton.isEnabled = false
                 openButton.isEnabled = false

@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import blocks.love.RecyclerAdapter
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.BackpressureStrategy
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -79,6 +80,10 @@ fun View.showDialogInstall(msgId: Int, titleId: Int, context: Context, packageNa
 }
 
 fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownloader, loveFilePath: String) {
+    downloadLoveProject(url, context, fileDownloader, loveFilePath, null)
+}
+
+fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownloader, loveFilePath: String, projectViewHolder: RecyclerAdapter.ProjectViewHolder? = null) {
     val loveFile = File(loveFilePath)
     if (loveFile.exists()) loveFile.delete()
     Log.d("DOWNLOAD", "destination: $loveFilePath")
@@ -97,6 +102,7 @@ fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownl
         }, {
             Log.d("DOWNLOAD", "Project Downloaded")
             openLove2dApp(loveFilePath, context)
+            projectViewHolder?.disableOrEnableButtons(loveFilePath)
         })
 }
 

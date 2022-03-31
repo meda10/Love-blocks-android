@@ -32,7 +32,13 @@ class Messaging : FirebaseMessagingService() {
         private const val TAG = "FCM"
     }
 
-//    https://www.geeksforgeeks.org/how-to-push-notification-in-android-using-firebase-cloud-messaging/
+    /**
+     * Generate Notification
+     *
+     * @author https://www.geeksforgeeks.org/how-to-push-notification-in-android-using-firebase-cloud-messaging/
+     * @param title
+     * @param message
+     */
     private fun generateNotification(title: String, message : String){
 
         val intent = Intent(this, MainActivity::class.java)
@@ -83,7 +89,6 @@ class Messaging : FirebaseMessagingService() {
         }
     }
 
-
     /**
      * Called if the FCM registration token is updated. This may occur if the security of
      * the previous token had been compromised. Note that this is called when the
@@ -93,7 +98,6 @@ class Messaging : FirebaseMessagingService() {
         Log.d(TAG, "Refreshed token: $token")
         sendRegistrationToServer(token)
     }
-
 
     /**
      * Schedule async work using WorkManager.
@@ -139,34 +143,4 @@ class Messaging : FirebaseMessagingService() {
         }
         Log.d("TOKEN", "sendRegistrationTokenToServer($fcmToken)")
     }
-
-//    /**
-//     * Create and show a simple notification containing the received FCM message.
-//     *
-//     * @param messageBody FCM message body received.
-//     */
-//    private fun sendNotification(messageBody: String) {
-//        val intent = Intent(this, MainActivity::class.java)
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//        val pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-//            PendingIntent.FLAG_ONE_SHOT)
-//
-//        val channelId = getString(R.string.default_notification_channel_id)
-//        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-//        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-//            .setSmallIcon(R.drawable.ic_stat_ic_notification)
-//            .setContentTitle(getString(R.string.fcm_message))
-//            .setContentText(messageBody)
-//            .setAutoCancel(true)
-//            .setSound(defaultSoundUri)
-//            .setContentIntent(pendingIntent)
-//
-//        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//
-//        // Since android Oreo notification channel is needed.
-//        val channel = NotificationChannel(channelId, "Channel human readable title", NotificationManager.IMPORTANCE_DEFAULT)
-//        notificationManager.createNotificationChannel(channel)
-//
-//        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build())
-//    }
 }

@@ -22,15 +22,12 @@ data class ProjectsData(var id_token: String)
 data class Project(var id: Int, var name: String)
 data class ProjectInfoData(var id: Int, var id_token: String)
 data class ProjectInfoResponse(val url: String, val name: String)
-//data class ProjectAPKInfoData(var id: Int, var id_token: String)
-//data class ProjectAPKInfoResponse(val url: String, val name: String)
 data class RegisterData(var name: String, var email: String, var password: String, var password_confirmation: String, var terms: String, var fcm_token: String)
 data class RegisterResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
 data class LoginData(var email: String, var password: String, var fcm_token: String)
 data class LoginResponse(val id: String, val access_token: String, val token_type: String, val expires_at: String, val errors: Error)
 data class TokenData(val fcm_token: String, val id_token: String)
 data class TokenResponse(val errors: Error)
-data class Test(val Message: String)
 data class Error(val name: List<String>, val email: List<String>, val password: List<String>, val terms: List<String>, val error: String)
 
 var unsafeHttpClient = unsafeOkHttpClient // TODO remove -> only for local development
@@ -39,23 +36,6 @@ const val BASE_URL = "https://192.168.0.20/api/"
 
 private val client = OkHttpClient.Builder().build()
 
-
-interface ApiTest {
-    @Headers("Content-Type: application/json")
-    @GET("book")
-    fun getTest(): Call<Test>
-
-    companion object {
-        fun create(): ApiTest {
-            val retrofit = Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
-                .build()
-            return retrofit.create(ApiTest::class.java)
-        }
-    }
-}
 
 interface ApiProjects {
     @Headers("Content-Type: application/json")
@@ -90,23 +70,6 @@ interface ApiProjectInfo {
         }
     }
 }
-
-//interface ApiProjectAPKInfo {
-//    @Headers("Content-Type: application/json")
-//    @POST("apk")
-//    fun getProjectAPKInfo(@Body projectAPKInfoData: ProjectAPKInfoData): Call<ProjectAPKInfoResponse>
-//
-//    companion object {
-//        fun create(): ApiProjectAPKInfo {
-//            val retrofit = Retrofit.Builder()
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .baseUrl(BASE_URL)
-//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
-//                .build()
-//            return retrofit.create(ApiProjectAPKInfo::class.java)
-//        }
-//    }
-//}
 
 interface ApiDownloadProject {
 
@@ -239,21 +202,6 @@ class RestApiManager {
         )
     }
 
-//    fun getProjectAPKInfo(projectAPKInfoData: ProjectAPKInfoData, onResult: (ProjectAPKInfoResponse?) -> Unit){
-//        val retrofit = ApiProjectAPKInfo.create().getProjectAPKInfo(projectAPKInfoData)
-//        retrofit.enqueue(
-//            object : Callback<ProjectAPKInfoResponse> {
-//                override fun onFailure(call: Call<ProjectAPKInfoResponse>, t: Throwable) {
-//                    onResult(null)
-//                }
-//                override fun onResponse(call: Call<ProjectAPKInfoResponse>, response: Response<ProjectAPKInfoResponse>) {
-//                    Log.d("APK", response.body().toString())
-//                    onResult(response.body())
-//                }
-//            }
-//        )
-//    }
-
     fun downloadProject(fileUrl: String, onResult: (ResponseBody?) -> Unit){
         val retrofit = ApiDownloadProject.create().downloadProject(fileUrl)
         retrofit.enqueue(
@@ -283,30 +231,6 @@ class RestApiManager {
                 }
             }
         )
-    }
-
-
-    fun getTest(){
-        val retrofit = ApiTest.create().getTest()
-        retrofit.enqueue(
-            object : Callback<Test>{
-                override fun onFailure(call: Call<Test>?, t: Throwable?) {
-                    Log.d("REST", t.toString())
-                    Log.d("REST", "FAIL")
-                    call?.cancel()
-                }
-                override fun onResponse(call: Call<Test>?, response: Response<Test>?) {
-                    if(response?.body() != null){
-                        Log.d("REST", "WIN")
-                        Log.d("REST", response.body().toString())
-                    } else {
-                        Log.d("REST", response?.body().toString())
-                        Log.d("REST", "NULL")
-                    }
-                }
-            }
-        )
-        Log.d("REST", "END")
     }
 }
 

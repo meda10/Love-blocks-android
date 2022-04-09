@@ -1,6 +1,5 @@
 package blocks.love.utils
 
-import blocks.love.unsafeHttpClient
 import io.reactivex.Observable
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -8,7 +7,13 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 
-//https://medium.com/mobile-app-development-publication/download-file-in-android-with-kotlin-874d50bccaa2
+
+/**
+ * Class for downloading project files prom server
+ *
+ * @author https://medium.com/mobile-app-development-publication/download-file-in-android-with-kotlin-874d50bccaa2
+ * @param okHttpClient
+ */
 class FileDownloader(okHttpClient: OkHttpClient) {
 
     companion object {

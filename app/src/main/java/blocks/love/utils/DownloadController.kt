@@ -1,7 +1,5 @@
 package blocks.love.utils
 
-// Source: https://androidwave.com/download-and-install-apk-programmatically/
-
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -16,6 +14,13 @@ import blocks.love.BuildConfig
 import blocks.love.R
 import java.io.File
 
+/**
+ * Download and install APK
+ *
+ * @author https://androidwave.com/download-and-install-apk-programmatically/
+ * @property context
+ * @property url
+ */
 class DownloadController(private val context: Context, private val url: String) {
 
     companion object {

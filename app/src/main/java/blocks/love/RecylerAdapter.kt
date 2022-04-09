@@ -9,9 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import blocks.love.utils.downloadLoveProject
-import blocks.love.utils.openLove2dApp
-import blocks.love.utils.showDialog
+import blocks.love.utils.*
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import java.io.File
@@ -19,10 +17,12 @@ import java.io.File
 class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapter.ProjectViewHolder>() {
 
     private var projectList : List<Project> = listOf()
+    lateinit var projectViewHolder : ProjectViewHolder
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProjectViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_adapter,parent,false)
-        return ProjectViewHolder(view)
+        projectViewHolder = ProjectViewHolder(view)
+        return projectViewHolder
     }
 
     override fun getItemCount(): Int {

@@ -28,8 +28,8 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var recyclerAdapter: RecyclerAdapter
+    internal lateinit var recyclerView: RecyclerView
+    internal lateinit var recyclerAdapter: RecyclerAdapter
     private lateinit var auth: FirebaseAuth
     internal lateinit var mainLayout: ConstraintLayout
     internal val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
@@ -101,6 +101,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Check if app was opened from FCM notification
+     */
     private fun checkIfAccessedFromFCMNotification(){
         val url = intent.getStringExtra("url")
         val name = intent.getStringExtra("name")
@@ -113,26 +116,39 @@ class MainActivity : AppCompatActivity() {
                 url.replace("localhost", "192.168.0.20"),
                 applicationContext,
                 fileDownloader,
-                loveFilePath
+                loveFilePath,
+                recyclerAdapter.projectViewHolder
             )
         }
     }
 
+    /**
+     * SignOut Button onClick
+     */
     private fun signOutButton() {
         Firebase.auth.signOut()
         goToAuthActivity()
     }
 
+    /**
+     * Info Button onCLick
+     */
     private fun infoButton(){
         mainLayout.showDialog(R.string.how_it_works, R.string.how_it_works_title, this)
     }
 
+    /**
+     * Create Intent and go to Login Activity
+     */
     private fun goToAuthActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         overridePendingTransition(0, 0);
     }
 
+    /**
+     * Get all projects of current user
+     */
     private fun getUserProjects(){
         val user = Firebase.auth.currentUser
         user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
@@ -156,6 +172,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Chek if google play services are installed
+     *
+     * @return
+     */
     private fun checkGooglePlayServices(): Boolean {
         return if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             Log.e("PLAY", "Error update play services")
@@ -164,6 +185,12 @@ class MainActivity : AppCompatActivity() {
         } else true
     }
 
+    /**
+     * Check if package is installed
+     *
+     * @param packageName
+     * @return
+     */
     private fun isPackageInstalled(packageName: String): Boolean {
         return try {
             this.packageManager.getPackageInfo(packageName, 0)
@@ -174,6 +201,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Check if has access to internet
+     *
+     * @return
+     */
     private fun isOnline(): Boolean {
         val connectivityManager = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)

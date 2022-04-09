@@ -30,20 +30,6 @@
         </com.google.android.material.appbar.AppBarLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-<!--    <TextView-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:id="@+id/mainAppTitle"-->
-<!--        android:paddingBottom="12dp"-->
-<!--        android:paddingTop="12dp"-->
-<!--        android:textSize="8pt"-->
-<!--        android:textAlignment="center"-->
-<!--        android:text="@string/projects"-->
-<!--        android:textColor="@color/black"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/topBar"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/recycler_view"-->
-<!--        />-->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

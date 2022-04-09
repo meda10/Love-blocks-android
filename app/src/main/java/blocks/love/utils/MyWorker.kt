@@ -13,6 +13,11 @@ class MyWorker(appContext: Context, workerParams: WorkerParameters) : Worker(app
 
     private val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
 
+    /**
+     * Run async job for downloading project
+     *
+     * @return
+     */
     override fun doWork(): Result {
         Log.d("FCM", "Running Worker")
         val url = inputData.getString("url")

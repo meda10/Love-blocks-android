@@ -9,6 +9,9 @@ import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import blocks.love.utils.LoginData
+import blocks.love.utils.RestApiManager
+import blocks.love.utils.TokenData
 import blocks.love.utils.showDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -17,7 +20,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 const val sharedPrefFile = "login_shared_preferences"
 const val logged = "logged"
-const val fcm_token = "fcm_token"
 
 class LoginActivity : AppCompatActivity() {
 
@@ -54,28 +56,9 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Runs when user is Signed In
-//    private fun onUserSignedIn(user: FirebaseUser) {
-//        setContentView(R.layout.main_screen)
-//        val view_label = findViewById<View>(R.id.view_label) as TextView
-//        val view_btn = findViewById<View>(R.id.view_btn) as Button
-//        view_label.text = user.displayName
-//        view_btn.setText("Sign Out")
-//        view_btn.setOnClickListener { signOutButton() }
-
-//        GET ID Token for backend calls
-//        user.getIdToken(true).addOnCompleteListener { task ->
-//            if (task.isSuccessful) {
-//                val idToken = task.result.token
-//                // Send token to your backend via HTTPS
-//                // ...
-//            } else {
-//                // Handle error -> task.getException();
-//            }
-//        }
-//    }
-
-    // Runs when user is Logged In
+    /**
+     *  Runs when user is Logged In
+     */
     private fun userIsLoggedIn() {
         sendRegistrationToServer()
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
@@ -86,7 +69,9 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Runs when user is Logged Out
+    /**
+     * Runs when user is Logged Out
+     */
     private fun userIsLoggedOut() {
         val loginEmail = findViewById<View>(R.id.login_email_edit) as EditText
         val loginPassword = findViewById<View>(R.id.login_password_edit) as EditText
@@ -98,41 +83,33 @@ class LoginActivity : AppCompatActivity() {
         buttonLogin.setOnClickListener { loginButton() }
     }
 
-    // Login user -> On button click
+    /**
+     * Login button onClick
+     */
     private fun loginButton() {
         val loginEmail = findViewById<View>(R.id.login_email_edit) as EditText
         val loginPassword = findViewById<View>(R.id.login_password_edit) as EditText
 
-        login(
-            loginEmail.text.toString(),
-            loginPassword.text.toString()
-        )
+        login(loginEmail.text.toString(), loginPassword.text.toString())
     }
 
-//    // Activity result
-//    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
-//        val response = result.idpResponse
-//        if (result.resultCode == RESULT_OK) {
-//            // Successfully signed in
-//            val user = FirebaseAuth.getInstance().currentUser!!
-//            userIsLoggedIn()
-////            onUserSignedIn(user)
-//        } else {
-//            // Sign in failed. If response is null the user canceled the
-//            // sign-in flow using the back button. Otherwise check
-//            // response.getError().getErrorCode() and handle the error.
-////            val response = IdpResponse.fromResultIntent(data)
-//            response?.error?.printStackTrace()
-//            userIsLoggedOut()
-//        }
-//    }
-
+    /**
+     * Register button onCLick
+     *
+     * @param view
+     */
     fun registerOnClick(view: View?) {
         val intent = Intent(this, RegisterActivity::class.java)
         startActivity(intent)
         overridePendingTransition(0, 0)
     }
 
+    /**
+     * Send login info tu server
+     *
+     * @param email
+     * @param password
+     */
     private fun login(email: String, password: String) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
             if (getFCMToken.isSuccessful) {
@@ -150,7 +127,6 @@ class LoginActivity : AppCompatActivity() {
                         responseData?.access_token != null -> {
                             Log.d("LOGIN", "WIN")
                             Log.d("LOGIN", responseData.id)
-//                            Toast.makeText(baseContext, "LOGIN WIN", Toast.LENGTH_SHORT).show()
                             loginWithCustomToken(responseData.access_token)
                         }
                         responseData?.errors?.error != null -> {
@@ -170,6 +146,11 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Firebase Login with cusom token
+     *
+     * @param firebaseToken
+     */
     private fun loginWithCustomToken(firebaseToken: String){
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
         sharedPreferences.edit().putBoolean(logged, true).apply()
@@ -189,8 +170,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * Gets FCM token, then user and ID Token -> sends
-     *
+     * Gets FCM token, then user and ID Token -> sends to server
      */
     private fun sendRegistrationToServer() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->

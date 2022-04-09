@@ -47,6 +47,13 @@ fun View.showDialog(msgId: Int, titleId: Int, context: Context) {
     showDialog(context.getString(msgId), context.getString(titleId), context)
 }
 
+/**
+ * Shows normal dialog
+ *
+ * @param msg
+ * @param title
+ * @param context
+ */
 fun View.showDialog(msg: String, title: String, context: Context) {
     val dialogBuilder = AlertDialog.Builder(context)
 
@@ -60,6 +67,14 @@ fun View.showDialog(msg: String, title: String, context: Context) {
     alert.show()
 }
 
+/**
+ * Shows dialog for installing Love for Android
+ *
+ * @param msgId
+ * @param titleId
+ * @param context
+ * @param packageName
+ */
 fun View.showDialogInstall(msgId: Int, titleId: Int, context: Context, packageName: String) {
     val dialogBuilder = AlertDialog.Builder(context)
 
@@ -79,10 +94,27 @@ fun View.showDialogInstall(msgId: Int, titleId: Int, context: Context, packageNa
     alert.show()
 }
 
+/**
+ * Downloads project from url
+ *
+ * @param url
+ * @param context
+ * @param fileDownloader
+ * @param loveFilePath
+ */
 fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownloader, loveFilePath: String) {
     downloadLoveProject(url, context, fileDownloader, loveFilePath, null)
 }
 
+/**
+ * Downloads project from url
+ *
+ * @param url
+ * @param context
+ * @param fileDownloader
+ * @param loveFilePath
+ * @param projectViewHolder
+ */
 fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownloader, loveFilePath: String, projectViewHolder: RecyclerAdapter.ProjectViewHolder? = null) {
     val loveFile = File(loveFilePath)
     if (loveFile.exists()) loveFile.delete()
@@ -106,7 +138,12 @@ fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownl
         })
 }
 
-
+/**
+ * Open love2d game with -> uses Love for Android app
+ *
+ * @param loveFilePath
+ * @param context
+ */
 fun openLove2dApp(loveFilePath: String, context: Context){
     val file = File(loveFilePath)
     val uri = FileProvider.getUriForFile(context, "blocks.love.fileProvider", file)

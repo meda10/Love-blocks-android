@@ -9,6 +9,8 @@ import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import blocks.love.utils.RegisterData
+import blocks.love.utils.RestApiManager
 import blocks.love.utils.showDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -32,7 +34,10 @@ class RegisterActivity : AppCompatActivity() {
         userIsNotRegistered()
     }
 
-    // Runs when user is not Registered
+
+    /**
+     * Runs when user is not Registered
+     */
     private fun userIsNotRegistered() {
         val registerEmail = findViewById<View>(R.id.register_email_edit) as EditText
         val registerPassword = findViewById<View>(R.id.register_password_edit) as EditText
@@ -46,6 +51,9 @@ class RegisterActivity : AppCompatActivity() {
         buttonRegister.setOnClickListener { registerButton() }
     }
 
+    /**
+     * Register button onClick
+     */
     private fun registerButton() {
         val registerEmail = findViewById<View>(R.id.register_email_edit) as EditText
         val registerPassword = findViewById<View>(R.id.register_password_edit) as EditText
@@ -58,12 +66,19 @@ class RegisterActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Send data to server and register user
+     *
+     * @param email
+     * @param password
+     * @param passwordConfirmation
+     */
     private fun register(email: String, password: String, passwordConfirmation: String) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
             if (getFCMToken.isSuccessful) {
                 val fcmToken = getFCMToken.result
                 val userData = RegisterData(
-                    name = "Barry",
+                    name = email,
                     email = email,
                     password = password,
                     password_confirmation = passwordConfirmation,
@@ -77,7 +92,6 @@ class RegisterActivity : AppCompatActivity() {
                         responseData?.access_token != null -> {
                             Log.d("REG", "WIN")
                             Log.d("REG", responseData.id)
-//                            Toast.makeText(baseContext, "REG WIN", Toast.LENGTH_SHORT).show()
                             loginWithCustomToken(responseData.access_token)
                         }
                         responseData?.errors?.error != null -> {
@@ -110,12 +124,22 @@ class RegisterActivity : AppCompatActivity() {
     }
 
 
+    /**
+     * Login Button onClick
+     *
+     * @param view
+     */
     fun loginOnClick(view: View?) {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         overridePendingTransition(0, 0)
     }
 
+    /**
+     * Firebase login with custom token
+     *
+     * @param firebaseToken
+     */
     private fun loginWithCustomToken(firebaseToken: String){
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
         sharedPreferences.edit().putBoolean(logged, true).apply()
@@ -134,7 +158,9 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Runs when user is Logged In
+    /**
+     * Runs when user is Logged In
+     */
     private fun userIsLoggedIn() {
         val sharedPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE)
         if (sharedPreferences.getBoolean(logged, false)) {

@@ -13,6 +13,7 @@ import blocks.love.utils.LoginData
 import blocks.love.utils.RestApiManager
 import blocks.love.utils.TokenData
 import blocks.love.utils.showDialog
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -25,6 +26,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var authLayout: ScrollView
+    private lateinit var loadingSpinner: CircularProgressIndicator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +34,7 @@ class LoginActivity : AppCompatActivity() {
         val user = Firebase.auth.currentUser
         setContentView(R.layout.activity_login)
         authLayout = findViewById<View>(R.id.loginLayout) as ScrollView
+        loadingSpinner = findViewById<View>(R.id.loadingLogin) as CircularProgressIndicator
 
 
         when {
@@ -111,6 +114,7 @@ class LoginActivity : AppCompatActivity() {
      * @param password
      */
     private fun login(email: String, password: String) {
+        loadingSpinner.show()
         FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
             if (getFCMToken.isSuccessful) {
                 val fcmToken = getFCMToken.result
@@ -131,16 +135,19 @@ class LoginActivity : AppCompatActivity() {
                         }
                         responseData?.errors?.error != null -> {
                             Log.d("LOGIN", responseData.errors.error)
+                            loadingSpinner.hide()
                             authLayout.showDialog(responseData.errors.error, R.string.something_wrong_title, this)
                         }
                         else -> {
                             Log.d("LOGIN", "NULL")
+                            loadingSpinner.hide()
                             authLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, this)
                         }
                     }
                 }
             } else {
                 // todo Handle FCM error
+                loadingSpinner.hide()
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
@@ -158,9 +165,11 @@ class LoginActivity : AppCompatActivity() {
         firebaseToken.let { token ->
             auth.signInWithCustomToken(token).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    loadingSpinner.hide()
                     Log.d("LOGIN", "signInWithCustomToken:success")
                     userIsLoggedIn()
                 } else {
+                    loadingSpinner.hide()
                     Log.w("LOGIN", "signInWithCustomToken:failure", task.exception)
                     Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     userIsLoggedOut()

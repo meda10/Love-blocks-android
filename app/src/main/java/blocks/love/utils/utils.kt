@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import blocks.love.MainActivity
 import blocks.love.RecyclerAdapter
 import com.google.android.material.snackbar.Snackbar
 import io.reactivex.BackpressureStrategy
@@ -126,12 +127,21 @@ fun downloadLoveProject(url: String, context: Context, fileDownloader: FileDownl
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe({
+            if (context is MainActivity) {
+                context.loadingSpinner.hide()
+            }
             Log.d("DOWNLOAD", "$it% Downloaded")
             Toast.makeText(context, "$it% Downloaded", Toast.LENGTH_SHORT).show()
         }, {
+            if (context is MainActivity) {
+                context.loadingSpinner.hide()
+            }
             Log.d("DOWNLOAD", "$it% Error")
             Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show()
         }, {
+            if (context is MainActivity) {
+                context.loadingSpinner.hide()
+            }
             Log.d("DOWNLOAD", "Project Downloaded")
             openLove2dApp(loveFilePath, context)
             projectViewHolder?.disableOrEnableButtons(loveFilePath)

@@ -1,6 +1,5 @@
 package blocks.love.utils
 
-import blocks.love.utils.UnsafeOkHttpClient.unsafeOkHttpClient
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -27,9 +26,9 @@ data class TokenData(val fcm_token: String, val id_token: String)
 data class TokenResponse(val errors: Error)
 data class Error(val name: List<String>, val email: List<String>, val password: List<String>, val terms: List<String>, val error: String)
 
-var unsafeHttpClient = unsafeOkHttpClient // TODO remove -> only for local development
-const val BASE_URL = "https://192.168.0.20/api/"
-//        var BASE_URL = "https://loveblocks.tk/api/"
+//var unsafeHttpClient = unsafeOkHttpClient // TODO remove -> only for local development
+//const val BASE_URL = "https://192.168.0.20/api/"
+var BASE_URL = "https://loveblocks.tk/api/"
 
 private val client = OkHttpClient.Builder().build()
 
@@ -44,7 +43,7 @@ interface ApiProjects {
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiProjects::class.java)
         }
@@ -61,7 +60,7 @@ interface ApiProjectInfo {
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiProjectInfo::class.java)
         }
@@ -78,7 +77,7 @@ interface ApiDownloadProject {
         fun create(): ApiDownloadProject {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiDownloadProject::class.java)
         }
@@ -87,7 +86,7 @@ interface ApiDownloadProject {
 
 interface ApiToken {
     @Headers("Content-Type: application/json")
-    @POST("fcm_token")
+    @POST("token")
     fun sendToken(@Body tokenData: TokenData): Call<TokenResponse>
 
     companion object {
@@ -95,7 +94,7 @@ interface ApiToken {
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiToken::class.java)
         }
@@ -112,7 +111,7 @@ interface ApiLogin {
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiLogin::class.java)
         }
@@ -129,7 +128,7 @@ interface ApiRegister {
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(BASE_URL)
-                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
+//                .client(unsafeHttpClient) // uses unsafe SSL TODO remove -> only for local development
                 .build()
             return retrofit.create(ApiRegister::class.java)
         }

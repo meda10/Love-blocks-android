@@ -54,9 +54,9 @@
     <string name="background_title">Allow work in background</string>
 
     <string name="install_access_required">Install access is required to install application.</string>
-    <string name="storage_access_required">Storage access is required to downloading the file.</string>
-    <string name="write_access_required">Storage access is required to downloading the file.</string>
-    <string name="read_access_required">Storage access is required to downloading the file.</string>
+    <string name="storage_access_required">Storage access is required for downloading files.</string>
+    <string name="write_access_required">Storage access is required for downloading files</string>
+    <string name="read_access_required">Storage access is required for downloading files</string>
     <string name="open">OPEN</string>
     <string name="info">Info</string>
     <string name="how_it_works_title">How it works</string>

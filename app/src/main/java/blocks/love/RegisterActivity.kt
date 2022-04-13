@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import blocks.love.utils.RegisterData
 import blocks.love.utils.RestApiManager
 import blocks.love.utils.showDialog
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -21,12 +22,14 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var authLayout: ScrollView
+    private lateinit var loadingSpinner: CircularProgressIndicator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
         auth = Firebase.auth
         authLayout = findViewById<View>(R.id.registerLayout) as ScrollView
+        loadingSpinner = findViewById<View>(R.id.loadingRegister) as CircularProgressIndicator
     }
 
     override fun onStart() {
@@ -74,6 +77,7 @@ class RegisterActivity : AppCompatActivity() {
      * @param passwordConfirmation
      */
     private fun register(email: String, password: String, passwordConfirmation: String) {
+        loadingSpinner.show()
         FirebaseMessaging.getInstance().token.addOnCompleteListener { getFCMToken ->
             if (getFCMToken.isSuccessful) {
                 val fcmToken = getFCMToken.result
@@ -96,28 +100,34 @@ class RegisterActivity : AppCompatActivity() {
                         }
                         responseData?.errors?.error != null -> {
                             Log.d("REG", responseData.errors.error)
+                            loadingSpinner.hide()
                             authLayout.showDialog(responseData.errors.error, R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.email != null -> {
                             for (i in 0 until responseData.errors.email.count()) Log.d("REG", responseData.errors.email[i])
+                            loadingSpinner.hide()
                             authLayout.showDialog(responseData.errors.email[0], R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.name != null -> {
                             for (i in 0 until responseData.errors.name.count()) Log.d("REG", responseData.errors.name[i])
+                            loadingSpinner.hide()
                             authLayout.showDialog(responseData.errors.name[0], R.string.something_wrong_title, this)
                         }
                         responseData?.errors?.password != null -> {
                             for (i in 0 until responseData.errors.password.count()) Log.d("REG", responseData.errors.password[i])
+                            loadingSpinner.hide()
                             authLayout.showDialog(responseData.errors.password[0], R.string.something_wrong_title, this)
                         }
                         else -> {
                             Log.d("REG", "NULL")
+                            loadingSpinner.hide()
                             authLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, this)
                         }
                     }
                 }
             } else {
                 // todo Handle FCM error
+                loadingSpinner.hide()
                 Log.w("TOKEN", "Fetching FCM registration token failed", getFCMToken.exception)
             }
         }
@@ -147,9 +157,11 @@ class RegisterActivity : AppCompatActivity() {
         firebaseToken.let { token ->
             auth.signInWithCustomToken(token).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    loadingSpinner.hide()
                     Log.d("REG", "signInWithCustomToken:success")
                     userIsLoggedIn()
                 } else {
+                    loadingSpinner.hide()
                     Log.w("REG", "signInWithCustomToken:failure", task.exception)
                     Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     userIsNotRegistered()

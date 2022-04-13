@@ -1,9 +1,12 @@
 package blocks.love
 
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
@@ -11,13 +14,16 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.RecyclerView
 import blocks.love.utils.*
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -33,6 +39,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     internal lateinit var mainLayout: ConstraintLayout
     internal val fileDownloader by lazy { FileDownloader(OkHttpClient.Builder().build()) }
+    internal lateinit var loadingSpinner: CircularProgressIndicator
+
+    companion object {
+        const val WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 10
+        const val READ_EXTERNAL_STORAGE_PERMISSION_CODE = 20
+        const val REQUEST_INSTALL_PACKAGES_PERMISSION_CODE = 30
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +59,8 @@ class MainActivity : AppCompatActivity() {
                 mainLayout = findViewById<View>(R.id.mainLayout) as ConstraintLayout
                 recyclerView = findViewById(R.id.recyclerView)
                 recyclerAdapter = RecyclerAdapter(this)
+                loadingSpinner = findViewById<View>(R.id.loading) as CircularProgressIndicator
+
                 recyclerView.adapter = recyclerAdapter
 
                 if(!isOnline()){
@@ -55,6 +70,10 @@ class MainActivity : AppCompatActivity() {
                 if (!checkGooglePlayServices()) {
                     mainLayout.showDialog(R.string.play_services, R.string.play_services_title, this)
                     Log.w("PLAY", "Device doesn't have google play services")
+                }
+
+                if(!writeFilePermissions()) {
+                    Log.w("PLAY", "Device doesn't have permisions")
                 }
 
                 // https://developer.android.com/training/package-visibility
@@ -117,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                 applicationContext,
                 fileDownloader,
                 loveFilePath,
-                recyclerAdapter.projectViewHolder
+//                recyclerAdapter.projectViewHolder
             )
         }
     }
@@ -143,7 +162,7 @@ class MainActivity : AppCompatActivity() {
     private fun goToAuthActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
-        overridePendingTransition(0, 0);
+        overridePendingTransition(0, 0)
     }
 
     /**
@@ -152,6 +171,7 @@ class MainActivity : AppCompatActivity() {
     private fun getUserProjects(){
         val user = Firebase.auth.currentUser
         user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
+            loadingSpinner.show()
             if (getIDToken.isSuccessful) {
                 val idToken = getIDToken.result.token
                 val projectData = ProjectsData( id_token = idToken!! )
@@ -160,14 +180,17 @@ class MainActivity : AppCompatActivity() {
                     if (responseData != null ) {
                         Log.d("PROJECTS", "OK")
                         recyclerAdapter.setProjectListItems(responseData)
+                        loadingSpinner.hide()
                     } else {
                         mainLayout.showDialog(R.string.connect_to_server, R.string.connect_to_internet_title, this)
                         Log.d("PROJECTS", "NULL")
+                        loadingSpinner.hide()
                     }
                 }
             } else {
                 //todo
                 Log.d("PROJECTS", getIDToken.exception.toString())
+                loadingSpinner.hide()
             }
         }
     }
@@ -217,5 +240,63 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return false
+    }
+
+    /**
+     * Get write permission
+     *
+     * @return
+     */
+    private fun writeFilePermissions(): Boolean {
+        requestPermission(WRITE_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE_PERMISSION_CODE, R.string.storage_access_required)
+        Log.d("DOWNLOAD", "Permission granted")
+        return ActivityCompat.checkSelfPermission(this@MainActivity, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+    }
+
+    /**
+     * Request permission
+     *
+     * @param permission
+     * @param requestCode
+     * @param message
+     */
+    private fun requestPermission(permission: String, requestCode: Int, message: Int) {
+        if (ActivityCompat.checkSelfPermission(this@MainActivity, permission) == PackageManager.PERMISSION_DENIED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, permission)) {
+                mainLayout.showSnackBar(message, Snackbar.LENGTH_INDEFINITE, R.string.ok) {
+                    ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+                }
+            } else {
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
+            }
+        }
+    }
+
+    /**
+     * Result of permission request
+     *
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            WRITE_EXTERNAL_STORAGE_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Write storage Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    mainLayout.showDialog(R.string.read_access_required, R.string.storage_permission_denied, this)
+//                    mainLayout.showSnackBar(R.string.storage_permission_denied, Snackbar.LENGTH_SHORT)
+                }
+            }
+            READ_EXTERNAL_STORAGE_PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
+                    Toast.makeText(this@MainActivity, "Read storage Permission Granted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Read storage Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 }

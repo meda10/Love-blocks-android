@@ -59,7 +59,9 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
 
         private fun downloadProject(project: Project, context: Context, loveFilePath: String, projectViewHolder: ProjectViewHolder){
             if (context is MainActivity){
+                context.loadingSpinner.show()
                 val user = Firebase.auth.currentUser
+                 //todo loading
                 user?.getIdToken(true)?.addOnCompleteListener { getIDToken ->
                     if (getIDToken.isSuccessful) {
                         val idToken = getIDToken.result.token
@@ -78,9 +80,12 @@ class RecyclerAdapter(val context: Context): RecyclerView.Adapter<RecyclerAdapte
                                     projectViewHolder
                                 )
                             } else {
+                                context.loadingSpinner.hide()
                                 context.mainLayout.showDialog(R.string.connect_to_server, R.string.something_wrong_title, context)
                             }
                         }
+                    } else {
+                        context.loadingSpinner.hide()
                     }
                 }
             }

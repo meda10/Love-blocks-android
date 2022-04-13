@@ -33,8 +33,8 @@ class FileDownloader(okHttpClient: OkHttpClient) {
     fun download(url: String, file: File): Observable<Int> {
         return Observable.create { emitter ->
             val request = Request.Builder().url(url).build()
-//            val response = okHttpClient.newCall(request).execute()
-            val response = unsafeHttpClient.newCall(request).execute() //todo remove
+            val response = okHttpClient.newCall(request).execute()
+//            val response = unsafeHttpClient.newCall(request).execute() //todo remove
             val body = response.body()
             val responseCode = response.code()
             if (responseCode >= HttpURLConnection.HTTP_OK &&

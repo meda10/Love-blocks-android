@@ -72,16 +72,16 @@ class MainActivity : AppCompatActivity() {
                     Log.w("PLAY", "Device doesn't have google play services")
                 }
 
-                if(!writeFilePermissions()) {
-                    Log.w("PLAY", "Device doesn't have permisions")
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    if (!writeFilePermissions()) {
+                        Log.w("PLAY", "Device doesn't have permissions")
+                    }
                 }
 
                 // https://developer.android.com/training/package-visibility
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                    if (!isPackageInstalled("org.love2d.android")){
-                        mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
-                        Log.w("PLAY", "Device doesn't have Love for Android installed")
-                    }
+                if (!isPackageInstalled("org.love2d.android")){
+                    mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
+                    Log.w("PLAY", "Device doesn't have Love for Android installed")
                 }
 
                 val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
@@ -215,13 +215,14 @@ class MainActivity : AppCompatActivity() {
      * @return
      */
     private fun isPackageInstalled(packageName: String): Boolean {
-        return try {
-            this.packageManager.getPackageInfo(packageName, 0)
-            true
+        val pm = packageManager
+        try {
+            val info = pm.getPackageInfo(packageName, PackageManager.GET_META_DATA)
         } catch (e: NameNotFoundException) {
             Log.w("PLAY", "Not installed: $e")
-            false
+            return false
         }
+        return true
     }
 
     /**

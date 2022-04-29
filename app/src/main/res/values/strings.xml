@@ -47,7 +47,7 @@
     <string name="connect_to_internet">Application needs internet connection to work properly.</string>
     <string name="connect_to_internet_title">Internet connection</string>
 
-    <string name="play_services">Application needs google play services installed properly.</string>
+    <string name="play_services">Application needs google play services installed to work properly.</string>
     <string name="play_services_title">Google play services</string>
 
     <string name="background">Please allow application to work in background.</string>

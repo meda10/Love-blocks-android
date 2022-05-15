@@ -78,7 +78,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // https://developer.android.com/training/package-visibility
                 if (!isPackageInstalled("org.love2d.android")){
                     mainLayout.showDialogInstall(R.string.install_love, R.string.install_love_title, this, "org.love2d.android")
                     Log.w("PLAY", "Device doesn't have Love for Android installed")

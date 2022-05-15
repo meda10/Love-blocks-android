@@ -1,7 +1,5 @@
 package blocks.love.utils
 
-//https://github.com/firebase/quickstart-android/blob/8d5a8bc2578ff74c6b3f53bc5c8aa945c7e03fa6/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/kotlin/MyFirebaseMessagingService.kt#L65-L77
-
 import android.util.Log
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
@@ -11,6 +9,12 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
+/**
+ * @Title: quickstart-android
+ * @Author: Firebase
+ * @Date: 20.2.2022
+ * @Availability: https://github.com/firebase/quickstart-android/blob/8d5a8bc2578ff74c6b3f53bc5c8aa945c7e03fa6/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/kotlin/MyFirebaseMessagingService.kt#L65-L77
+ */
 class Messaging : FirebaseMessagingService() {
 
     private val channelId = "fcm_default_channel"
@@ -26,11 +30,6 @@ class Messaging : FirebaseMessagingService() {
      * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
      */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-//        remoteMessage.notification?.let {
-//            Log.d(TAG, "Notification: $it")
-//            generateNotification(it.title!!, it.body!!)
-//        }
-
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
             scheduleJob(remoteMessage.data)

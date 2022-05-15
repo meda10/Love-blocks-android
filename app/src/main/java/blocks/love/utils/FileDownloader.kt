@@ -11,7 +11,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Class for downloading project files prom server
  *
- * @author https://medium.com/mobile-app-development-publication/download-file-in-android-with-kotlin-874d50bccaa2
+ * @Title: Download File in Android with Kotlin
+ * @Author: Elye
+ * @Date: 23.2.2022
+ * @Availability: https://medium.com/mobile-app-development-publication/download-file-in-android-with-kotlin-874d50bccaa2
  * @param okHttpClient
  */
 class FileDownloader(okHttpClient: OkHttpClient) {

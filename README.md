@@ -3,3 +3,4 @@
 
 ### Used Technologies
  - Firebase Cloud Messaging (Communication with Web app)
+ - Firebase Auth
